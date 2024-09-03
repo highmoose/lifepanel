@@ -853,7 +853,7 @@ export default function Dashboard(user) {
                     {boards
                         .sort((a, b) => a.bOrder - b.bOrder)
                         .map((board, index) => (
-                            <BoardsComponent board={board} />
+                            <BoardsComponent key={board.id} board={board} />
                         ))}
                 </div>
             ) : (
