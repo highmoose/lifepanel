@@ -17,8 +17,6 @@ export default function DashboardPanel(signOut) {
     const [selectedNav, setSelectedNav] = useState("dashboard");
     const [quickTicksOpen, setQuickTicksOpen] = useState(false);
 
-    const [quickTicks, setQuickTicks] = useState([]);
-
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {

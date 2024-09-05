@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useState, useEffect } from "react";
 import { Reorder } from "framer-motion";
 import { db } from "../../src/app/firebase/config";
@@ -10,6 +10,8 @@ import {
     doc,
     deleteDoc,
     writeBatch,
+    where,
+    query,
 } from "firebase/firestore";
 import DateFormatter from "../functional/dateFormatter";
 import { useDisclosure } from "@mantine/hooks";
@@ -29,6 +31,7 @@ import {
     MoveHorizontal,
     Plus,
     PlusIcon,
+    TextCursorInput,
     Trash2,
     X,
 } from "lucide-react";
@@ -37,17 +40,31 @@ export default function Dashboard(user) {
     const [taskModal, { open: openTaskModal, close: closeTaskModal }] =
         useDisclosure(false);
 
+    const [
+        deleteBoardModal,
+        { open: openDeleteBoardModal, close: closeDeleteBoardModal },
+    ] = useDisclosure(false);
+    const [confirmDelete, setConfirmDelete] = useState("");
+
     const [isEditMode, setIsEditMode] = useState(false);
     const [boardsLocked, setBoardsLocked] = useState(true);
     const [dragBoard, setDragBoard] = useState();
+    const [activeBoardId, setActiveBoardId] = useState({});
+    const dropdownRef = useRef(null);
 
     const [checkListOpen, setCheckListOpen] = useState({});
     const [modalTitle, setModalTitle] = useState("Add New Board");
+    const [boardName, setBoardName] = useState("");
     const [addBoard, setAddBoard] = useState(false);
 
     const [boards, setBoards] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
+
+    const [newBoard, setNewBoard] = useState({
+        bName: "",
+        bOrder: "",
+    });
 
     const [newTask, setNewTask] = useState({
         tName: "",
@@ -68,6 +85,12 @@ export default function Dashboard(user) {
     const [selectedBoard, setSelectedBoard] = useState();
     const [selectedTask, setSelectedTask] = useState();
     const [selectedCheck, setSelectedCheck] = useState();
+
+    const selectedChecks = Array.isArray(checks[selectedTask])
+        ? checks[selectedTask]
+        : [];
+
+    const sortedChecks = selectedChecks.sort((a, b) => a.cOrder - b.cOrder);
 
     const getProjectData = async () => {
         await fetchBoardsData();
@@ -291,6 +314,36 @@ export default function Dashboard(user) {
         fetchTasks(selectedBoard);
     };
 
+    const submitNewBoard = async (e) => {
+        e.preventDefault();
+        try {
+            const boardsQuerySnapshot = await getDocs(
+                collection(db, "userData", auth.currentUser.uid, "boards")
+            );
+            let maxBOrder = 0;
+            boardsQuerySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.bOrder !== undefined && data.bOrder > maxBOrder) {
+                    maxBOrder = data.bOrder;
+                }
+            });
+            const nextBOrder = maxBOrder + 1;
+            const docRef = await addDoc(
+                collection(db, "userData", auth.currentUser.uid, "boards"),
+                {
+                    bName: newBoard.bName,
+                    bCreated: new Date().toISOString(),
+                    bOrder: nextBOrder,
+                }
+            );
+            setAddBoard(false);
+            setNewBoard({ bName: "", bOrder: "" });
+        } catch (e) {
+            console.error("Error adding document: ", e);
+        }
+        fetchBoardsData();
+    };
+
     const submitNewCheck = async (e) => {
         e.preventDefault();
         try {
@@ -415,23 +468,48 @@ export default function Dashboard(user) {
         fetchChecks(selectedBoard, selectedTask);
     };
 
-    const deleteTask = async () => {
+    const deleteCollection = async (collectionRef) => {
+        const q = query(collectionRef);
+        const querySnapshot = await getDocs(q);
+
+        const deletePromises = querySnapshot.docs.map((doc) =>
+            deleteDoc(doc.ref)
+        );
+        await Promise.all(deletePromises);
+    };
+
+    const deleteBoardAndSubcollections = async (boardDocRef) => {
+        // Delete all documents in subcollections
+        const subcollections = ["tasks", "checks"]; // Replace with actual subcollection names
+
+        for (const subcollectionName of subcollections) {
+            const subcollectionRef = collection(boardDocRef, subcollectionName);
+            await deleteCollection(subcollectionRef);
+        }
+
+        // Finally, delete the board document itself
+        await deleteDoc(boardDocRef);
+    };
+
+    const deleteBoard = async () => {
         try {
-            const taskDocRef = doc(
+            const boardDocRef = doc(
                 db,
                 "userData",
                 auth.currentUser.uid,
                 "boards",
-                selectedBoard,
-                "tasks",
-                selectedTask
+                selectedBoard
             );
-            await deleteDoc(taskDocRef);
-            console.log("Document successfully deleted!");
-            setNewTask({});
-            closeTaskModal();
+
+            // Delete board and all its subcollections
+            await deleteBoardAndSubcollections(boardDocRef);
+
+            console.log("Board and its subcollections successfully deleted!");
+            setSelectedBoard("");
         } catch (e) {
             console.error("Error deleting document: ", e);
+        } finally {
+            fetchBoardsData(); // Fetch updated board data after deletion
         }
     };
 
@@ -457,6 +535,26 @@ export default function Dashboard(user) {
         fetchChecks(selectedBoard, selectedTask);
     };
 
+    const deleteTask = async () => {
+        try {
+            const taskDocRef = doc(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "boards",
+                selectedBoard,
+                "tasks",
+                selectedTask
+            );
+            await deleteDoc(taskDocRef);
+            console.log("Task successfully deleted!");
+            setSelectedTask({});
+        } catch (e) {
+            console.error("Error deleting document: ", e);
+        }
+        fetchTasks(selectedBoard);
+    };
+
     const getBorderClass = (priority) => {
         switch (priority) {
             case "High":
@@ -471,6 +569,26 @@ export default function Dashboard(user) {
                 return "border-zinc-50";
         }
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target) &&
+                activeBoardId !== null // Only close if dropdown is open
+            ) {
+                setActiveBoardId(null); // Close the dropdown
+            }
+        };
+
+        // Attach event listener for clicks outside
+        document.addEventListener("mousedown", handleClickOutside);
+
+        // Clean up the event listener on component unmount
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [activeBoardId]);
 
     const BoardsComponent = ({ board }) => {
         return (
@@ -515,9 +633,51 @@ export default function Dashboard(user) {
                                         )}
                                     </div>
                                 )}{" "}
-                                <p className="text-zinc-900 text-lg font-semibold  pl-1">
-                                    {board.bName}
-                                </p>
+                                <div className="flex justify-between relative">
+                                    <p className="text-zinc-900 text-lg font-semibold  pl-1">
+                                        {board.bName}
+                                    </p>
+                                    <button
+                                        onClick={() =>
+                                            setActiveBoardId(board.id)
+                                        }
+                                    >
+                                        <EllipsisVertical
+                                            size={20}
+                                            strokeWidth={1.5}
+                                            color="#000000"
+                                        />
+                                    </button>
+                                    {activeBoardId === board.id && (
+                                        <div
+                                            ref={dropdownRef}
+                                            className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden"
+                                        >
+                                            <div className="flex hover:bg-zinc-100 hover:text-zinc-900 items-center justify-between p-2">
+                                                <p>Rename Board</p>
+                                                <TextCursorInput
+                                                    size={16}
+                                                    strokeWidth={2}
+                                                />
+                                            </div>
+                                            <div className="border border-zinc-800" />
+                                            <div
+                                                onClick={() => {
+                                                    openDeleteBoardModal();
+                                                    setBoardName(board.bName);
+                                                    setSelectedBoard(board.id);
+                                                }}
+                                                className="flex hover:bg-zinc-100 hover:text-zinc-900 items-center justify-between p-2"
+                                            >
+                                                <p>Delete Board</p>
+                                                <Trash2
+                                                    size={16}
+                                                    strokeWidth={2}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex gap-x-1">
                                 <button
@@ -684,7 +844,7 @@ export default function Dashboard(user) {
                 </div>
                 <div className={` ${!boardsLocked && "opacity-5"} mb-2`}>
                     <Progress
-                        color="#DBDEE0"
+                        color="#c4c4c4"
                         radius="xl"
                         size="xs"
                         value={
@@ -701,16 +861,21 @@ export default function Dashboard(user) {
                         {checks[task.id]
                             ?.sort((a, b) => a.cOrder - b.cOrder) // Sort checks by cOrder
                             .map((check) => (
-                                <div key={check.id} className="">
-                                    <div className="flex items-center gap-1 py-0.5 rounded-full justify-between">
-                                        <p
-                                            className={`truncate ${
-                                                check.cCompleted
-                                                    ? "line-through text-zinc-400"
-                                                    : "text-text"
-                                            }`}
-                                        >
-                                            {check.cName}
+                                <div key={check.id} className="py-0.5">
+                                    <div className="flex  gap-1 rounded-full justify-between">
+                                        <p>
+                                            <p
+                                                className={`text-[13px] leading-4 ${
+                                                    check.cCompleted
+                                                        ? "line-through text-zinc-400"
+                                                        : "text-text"
+                                                }`}
+                                            >
+                                                {check.cName}
+                                            </p>
+                                            <div className="text-[12px] text-zinc-300 -mt-1">
+                                                Due: {check.cDue}
+                                            </div>
                                         </p>
 
                                         <div>
@@ -748,9 +913,6 @@ export default function Dashboard(user) {
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
-                                    <div className="text-xs text-zinc-300 px-3 italic -mt-1.5">
-                                        Due: {check.cDue}
                                     </div>
                                 </div>
                             ))}
@@ -810,7 +972,7 @@ export default function Dashboard(user) {
                         )}
                         {addBoard ? (
                             <form
-                                class="newBoard"
+                                onSubmit={submitNewBoard}
                                 className="flex items-center gap-x-1"
                             >
                                 <button
@@ -826,9 +988,16 @@ export default function Dashboard(user) {
                                     type="text"
                                     placeholder="Enter New Board Name"
                                     required
+                                    value={newBoard.name}
+                                    onChange={(e) =>
+                                        setNewBoard({
+                                            ...newBoard,
+                                            bName: e.target.value,
+                                        })
+                                    }
                                 />
                                 <button
-                                    type="submit"
+                                    onClick={() => setAddBoard(false)}
                                     className="whitespace-nowrap text-white my-2.5  rounded-full font-semibold tracking-wide"
                                 >
                                     <CircleX
@@ -840,13 +1009,16 @@ export default function Dashboard(user) {
                                 </button>
                             </form>
                         ) : (
-                            <button className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide">
+                            <button
+                                onClick={() => setAddBoard(true)}
+                                className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide"
+                            >
                                 New Board
                             </button>
                         )}
                     </div>
                 </div>
-                <div className="h-[2px] bg-zinc-300 -mt-[2px] z-0"></div>
+                <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
             </div>
             {boardsLocked ? (
                 <div className="flex gap-4 overflow-x-auto">
@@ -1023,7 +1195,10 @@ export default function Dashboard(user) {
                             </button>
                         )}
                         <button
-                            onClick={deleteTask}
+                            onClick={() => {
+                                deleteTask();
+                                closeTaskModal();
+                            }}
                             className="flex gap-x-1 text-zinc-900 bg-red-100  px-3 py-2 rounded-full items-center absolute bottom-8 left-11  text-sm font-semibold tracking-wider"
                         >
                             <div className="">
@@ -1133,9 +1308,7 @@ export default function Dashboard(user) {
                                 <>
                                     <Reorder.Group
                                         axis="y"
-                                        values={checks[selectedTask].sort(
-                                            (a, b) => a.cOrder - b.cOrder
-                                        )}
+                                        values={sortedChecks}
                                         onReorder={(reorderedChecks) => {
                                             const updatedChecks =
                                                 reorderedChecks.map(
@@ -1173,9 +1346,9 @@ export default function Dashboard(user) {
                                                         <div className="flex items-start gap-1 px-1 rounded-full justify-between cursor-ns-resize">
                                                             <div className="">
                                                                 <p
-                                                                    className={`truncate text-sm max-w-[270px]  ${
+                                                                    className={`text-[13px]  leading-4 ${
                                                                         check.cCompleted
-                                                                            ? "line-through text-zinc-500"
+                                                                            ? "line-through text-zinc-400"
                                                                             : "text-white"
                                                                     }`}
                                                                 >
@@ -1183,7 +1356,7 @@ export default function Dashboard(user) {
                                                                         check.cName
                                                                     }
                                                                 </p>
-                                                                <div className="text-xs text-zinc-600 -mt-1">
+                                                                <div className="text-[12px] text-zinc-500 -mt-1">
                                                                     Due:{" "}
                                                                     {check.cDue}
                                                                 </div>
@@ -1263,6 +1436,61 @@ export default function Dashboard(user) {
                             )}
                         </div>
                     </form>
+                </div>
+            </Modal>
+            <Modal
+                size={500}
+                radius={"md"}
+                title={
+                    <h1
+                        style={{
+                            fontSize: "1.2rem",
+                            fontWeight: "bold",
+                            paddingLeft: "1rem",
+                            paddingTop: "0.6rem",
+                        }}
+                    >
+                        Delete Board
+                    </h1>
+                }
+                opened={deleteBoardModal}
+                onClose={() => {
+                    closeDeleteBoardModal();
+                }}
+                centered
+                closeOnClickOutside={true}
+            >
+                <div className="px-4">
+                    <div className="text-[16px] mb-4">
+                        <p>
+                            Are you sure you want to delete the board "
+                            {boardName}"?
+                        </p>
+                        <p className="">
+                            This action cannot be undone. {"  "}Type{"  "}
+                            <strong>'Delete'</strong> to confirm.
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            className="w-full h-9 border border-zinc-400 rounded-full px-4"
+                            onChange={(e) => {
+                                setConfirmDelete(e.target.value);
+                            }}
+                        ></input>
+                        <button
+                            onClick={() => {
+                                if (confirmDelete === "Delete") {
+                                    deleteBoard();
+                                    closeDeleteBoardModal();
+                                }
+                            }}
+                            className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                        >
+                            Confirm
+                        </button>
+                    </div>
                 </div>
             </Modal>
             {/* <button onClick={() => console.log()} className="bg-blue-500 p-4">
