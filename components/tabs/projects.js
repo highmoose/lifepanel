@@ -1463,12 +1463,12 @@ export default function Dashboard(user) {
                 <div className="px-4">
                     <div className="text-[16px] mb-4">
                         <p>
-                            Are you sure you want to delete the board "
-                            {boardName}"?
+                            Are you sure you want to delete the board &quot;
+                            {boardName}&quot;?
                         </p>
                         <p className="">
                             This action cannot be undone. {"  "}Type{"  "}
-                            <strong>'Delete'</strong> to confirm.
+                            <strong>&apos;Delete&apos;</strong> to confirm.
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
