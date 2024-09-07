@@ -76,7 +76,7 @@ export default function DashboardPanel(signOut) {
             />
             {/* Tabs */}
             <div className="h-[100vh] w-[100vw] overflow-y-auto">
-                <div className="w-full h-full text-white text-sm px-8 pt-6 flex flex-col gap-2">
+                <div className="w-full h-full overflow-scroll text-white text-sm px-8 pt-6 flex flex-col gap-2">
                     <div className="text-lg font-semibold rounded-2xl flex flex-col justify-between text-text">
                         Welcome back, {user?.displayName}!
                     </div>
