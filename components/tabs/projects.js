@@ -1,6 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, CSSProperties } from "react";
 import { useState, useEffect } from "react";
 import { Reorder } from "framer-motion";
+import ClipLoader from "react-spinners/MoonLoader";
+
 import { db } from "../../src/app/firebase/config";
 import {
     collection,
@@ -10,14 +12,17 @@ import {
     doc,
     deleteDoc,
     writeBatch,
-    where,
     query,
 } from "firebase/firestore";
 import DateFormatter from "../functional/dateFormatter";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Progress } from "@mantine/core";
+import { Modal, Progress, Select } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import moment from "moment";
 import { auth } from "../../src/app/firebase/config";
 import {
+    BetweenHorizonalStart,
+    Check,
     ChevronsDownUp,
     ChevronsUpDown,
     Circle,
@@ -36,6 +41,12 @@ import {
     X,
 } from "lucide-react";
 
+const override = {
+    display: "block",
+    margin: "0 auto",
+    borderColor: "red",
+};
+
 export default function Dashboard(user) {
     const [taskModal, { open: openTaskModal, close: closeTaskModal }] =
         useDisclosure(false);
@@ -44,6 +55,12 @@ export default function Dashboard(user) {
         deleteBoardModal,
         { open: openDeleteBoardModal, close: closeDeleteBoardModal },
     ] = useDisclosure(false);
+
+    const [
+        renameBoardModal,
+        { open: openRenameBoardModal, close: closeRenameBoardModal },
+    ] = useDisclosure(false);
+
     const [confirmDelete, setConfirmDelete] = useState("");
 
     const [isEditMode, setIsEditMode] = useState(false);
@@ -52,14 +69,20 @@ export default function Dashboard(user) {
     const [activeBoardId, setActiveBoardId] = useState({});
     const dropdownRef = useRef(null);
 
+    const [taskDate, setTaskDate] = useState(new Date());
+
     const [checkListOpen, setCheckListOpen] = useState({});
     const [modalTitle, setModalTitle] = useState("Add New Board");
     const [boardName, setBoardName] = useState("");
+    const [renamedBoard, setRenamedBoard] = useState({});
     const [addBoard, setAddBoard] = useState(false);
 
     const [boards, setBoards] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+    const [color, setColor] = useState("#F87315");
 
     const [newBoard, setNewBoard] = useState({
         bName: "",
@@ -81,6 +104,8 @@ export default function Dashboard(user) {
         cCreated: "",
         cCompleted: "",
     });
+
+    const [projectsLoaded, setProjectsLoaded] = useState(false);
 
     const [selectedBoard, setSelectedBoard] = useState();
     const [selectedTask, setSelectedTask] = useState();
@@ -117,6 +142,7 @@ export default function Dashboard(user) {
         setBoards(boardsData);
         setTasks(tasksData);
         setChecks(checksData);
+        setProjectsLoaded(true);
     };
 
     useEffect(() => {
@@ -513,6 +539,24 @@ export default function Dashboard(user) {
         }
     };
 
+    const renameBoard = async () => {
+        try {
+            const boardDocRef = doc(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "boards",
+                selectedBoard
+            );
+            await updateDoc(boardDocRef, { bName: renamedBoard });
+            console.log("Document successfully updated!");
+            setSelectedBoard("");
+        } catch (e) {
+            console.error("Error updating document: ", e);
+        }
+        fetchBoardsData();
+    };
+
     const deleteCheck = async () => {
         try {
             const checkDocRef = doc(
@@ -653,7 +697,17 @@ export default function Dashboard(user) {
                                             ref={dropdownRef}
                                             className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden"
                                         >
-                                            <div className="flex hover:bg-zinc-100 hover:text-zinc-900 items-center justify-between p-2">
+                                            <div
+                                                onClick={() => {
+                                                    openRenameBoardModal();
+                                                    setBoardName(board.bName);
+                                                    setRenamedBoard(
+                                                        board.bName
+                                                    );
+                                                    setSelectedBoard(board.id);
+                                                }}
+                                                className="flex hover:bg-zinc-700 hover:text-white  items-center justify-between p-2"
+                                            >
                                                 <p>Rename Board</p>
                                                 <TextCursorInput
                                                     size={16}
@@ -667,7 +721,7 @@ export default function Dashboard(user) {
                                                     setBoardName(board.bName);
                                                     setSelectedBoard(board.id);
                                                 }}
-                                                className="flex hover:bg-zinc-100 hover:text-zinc-900 items-center justify-between p-2"
+                                                className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
                                             >
                                                 <p>Delete Board</p>
                                                 <Trash2
@@ -802,7 +856,13 @@ export default function Dashboard(user) {
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex ">
-                        <div className="flex items-center ">
+                        <div
+                            className={`flex items-center ${
+                                checks[task.id] && checks[task.id].length === 0
+                                    ? "my-2"
+                                    : ""
+                            } `}
+                        >
                             <p className="text-zinc-300 text-sm">Progress</p>
                         </div>
 
@@ -862,10 +922,10 @@ export default function Dashboard(user) {
                             ?.sort((a, b) => a.cOrder - b.cOrder) // Sort checks by cOrder
                             .map((check) => (
                                 <div key={check.id} className="py-0.5">
-                                    <div className="flex  gap-1 rounded-full justify-between">
+                                    <div className="flex  w-full gap-1  rounded-full justify-between">
                                         <p>
                                             <p
-                                                className={`text-[13px] leading-4 ${
+                                                className={`text-[13px] leading-4  ${
                                                     check.cCompleted
                                                         ? "line-through text-zinc-400"
                                                         : "text-text"
@@ -874,7 +934,10 @@ export default function Dashboard(user) {
                                                 {check.cName}
                                             </p>
                                             <div className="text-[12px] text-zinc-300 -mt-1">
-                                                Due: {check.cDue}
+                                                Due:{" "}
+                                                {moment(check.cDue).format(
+                                                    "DD-MMM-YY"
+                                                )}
                                             </div>
                                         </p>
 
@@ -920,582 +983,796 @@ export default function Dashboard(user) {
                 ) : null}
 
                 <div className="flex text-text">
-                    <div className="text-zinc-800 bg-zinc-50 text-xs p-1 px-2 rounded-md">
-                        <DateFormatter className="" date={task?.tDue} />
-                    </div>
+                    {task?.tDue && (
+                        <div className="text-zinc-800 bg-zinc-50 text-xs p-1 px-2 rounded-md">
+                            {moment(task?.tDue).format("DD MMMM YYYY")}
+                        </div>
+                    )}
                 </div>
             </>
         );
     };
 
     return (
-        <div>
-            {/* Boards Nav */}
-            <div className="mb-4">
-                <div className="flex justify-between">
-                    <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
-                        <GalleryHorizontalEnd
-                            color="#101010 "
-                            size={24}
-                            strokeWidth={1.5}
-                        />
-                        <div className="text-lg text-text font-semibold">
-                            Boards
-                        </div>
-                    </div>
-
-                    <div className="flex gap-x-2 items-center ">
-                        {boardsLocked ? (
-                            <button
-                                onClick={() => setBoardsLocked(false)}
-                                className="flex justify-center bg-text items-center cursor-pointer h-[34px] w-[34px] text-zinc-400 p-1 rounded-full text-xs font-semibold tracking-wider"
-                            >
-                                <Lock
-                                    color="#ffffff"
-                                    size={18}
-                                    strokeWidth={1.5}
-                                    noMargin
-                                />
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => setBoardsLocked(true)}
-                                className="flex justify-center bg-zinc-900 items-center cursor-pointer h-[34px] w-[34px] text-zinc-400 p-1 rounded-full text-xs font-semibold tracking-wider"
-                            >
-                                <LockOpen
-                                    color="#ffffff"
-                                    size={18}
-                                    strokeWidth={1.5}
-                                    noMargin
-                                />
-                            </button>
-                        )}
-                        {addBoard ? (
-                            <form
-                                onSubmit={submitNewBoard}
-                                className="flex items-center gap-x-1"
-                            >
-                                <button
-                                    type="submit"
-                                    className="bg-black whitespace-nowrap h-[34px] px-4 text-white rounded-full font-semibold tracking-wide"
-                                >
-                                    Add Board
-                                </button>
-                                <input
-                                    className="h-9 appearance-none rounded-full w-full px-4 pr-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    id="username"
-                                    name="username"
-                                    type="text"
-                                    placeholder="Enter New Board Name"
-                                    required
-                                    value={newBoard.name}
-                                    onChange={(e) =>
-                                        setNewBoard({
-                                            ...newBoard,
-                                            bName: e.target.value,
-                                        })
-                                    }
-                                />
-                                <button
-                                    onClick={() => setAddBoard(false)}
-                                    className="whitespace-nowrap text-white my-2.5  rounded-full font-semibold tracking-wide"
-                                >
-                                    <CircleX
-                                        color="#c9c9c9"
-                                        size={20}
+        <>
+            {projectsLoaded ? (
+                <>
+                    <div>
+                        {/* Boards Nav */}
+                        <div className="mb-4">
+                            <div className="flex justify-between">
+                                <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
+                                    <GalleryHorizontalEnd
+                                        color="#101010 "
+                                        size={24}
                                         strokeWidth={1.5}
-                                        noMargin
                                     />
-                                </button>
-                            </form>
-                        ) : (
-                            <button
-                                onClick={() => setAddBoard(true)}
-                                className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide"
-                            >
-                                New Board
-                            </button>
-                        )}
-                    </div>
-                </div>
-                <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
-            </div>
-            {boardsLocked ? (
-                <div className="flex gap-4 overflow-x-auto">
-                    {boards
-                        .sort((a, b) => a.bOrder - b.bOrder)
-                        .map((board, index) => (
-                            <BoardsComponent key={board.id} board={board} />
-                        ))}
-                </div>
-            ) : (
-                <Reorder.Group
-                    axis="x"
-                    values={boards}
-                    onReorder={(boards) => {
-                        const updatedBoards = boards.map((board, index) => ({
-                            ...board,
-                            bOrder: index + 1,
-                        }));
-                        setBoards(updatedBoards);
-                        updateBoardsOrderinDatabase(updatedBoards);
-                    }}
-                >
-                    <div className="flex gap-4 overflow-x-auto">
-                        {boards
-                            .sort((a, b) => a.bOrder - b.bOrder)
-                            .map((board, index) => (
-                                <Reorder.Item key={board.id} value={board}>
-                                    <BoardsComponent board={board} />
-                                </Reorder.Item>
-                            ))}
-                    </div>
-                </Reorder.Group>
-            )}
-            <Modal
-                size={1000}
-                radius={"md"}
-                title={
-                    <h1
-                        style={{
-                            fontSize: "1.2rem",
-                            fontWeight: "bold",
-                            paddingLeft: "1.9rem",
-                            paddingTop: "1rem",
-                        }}
-                    >
-                        {modalTitle}
-                    </h1>
-                }
-                opened={taskModal}
-                onClose={() => {
-                    closeTaskModal();
-                    setNewTask({});
-                }}
-                centered
-                closeOnClickOutside={true}
-            >
-                <div className="flex gap-10 px-8 pb-8 ">
-                    {/* Modal Task Form  */}
-                    <form
-                        class="newTask"
-                        onSubmit={isEditMode ? submitEditTask : submitNewTask}
-                        className="border-zinc-100  w-1/2 mt-[37px]"
-                    >
-                        <div className="mb-4">
-                            <label
-                                className="block text-gray-700 text-sm font-bold mb-1"
-                                for="newTaskName"
-                            >
-                                Task Name
-                            </label>
-                            <input
-                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-200 bg-transparent mr-2 placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
-                                id="newTaskName"
-                                name="newTaskName"
-                                type="text"
-                                value={newTask.tName ? newTask.tName : ""}
-                                placeholder="Enter New Task Name"
-                                onChange={(e) =>
-                                    setNewTask({
-                                        ...newTask,
-                                        tName: e.target.value,
-                                    })
-                                }
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label
-                                className="block text-gray-700 text-sm font-bold mb-1"
-                                for="newTaskDesc"
-                            >
-                                Task Description
-                            </label>
-                            <input
-                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-200 bg-transparent mr-2 placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
-                                id="newTaskDesc"
-                                name="newTaskDesc"
-                                type="text"
-                                value={newTask.tDesc ? newTask.tDesc : ""}
-                                placeholder="Enter New Task Description"
-                                onChange={(e) =>
-                                    setNewTask({
-                                        ...newTask,
-                                        tDesc: e.target.value,
-                                    })
-                                }
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label
-                                className="block text-gray-700 text-sm font-bold mb-1"
-                                for="newTaskDue"
-                            >
-                                Task Due
-                            </label>
-                            <input
-                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-200 bg-transparent mr-2 placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
-                                id="newTaskDue"
-                                name="newTaskDue"
-                                type="date"
-                                value={newTask.tDue ? newTask.tDue : ""}
-                                onChange={(e) =>
-                                    setNewTask({
-                                        ...newTask,
-                                        tDue: e.target.value,
-                                    })
-                                }
-                                required
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label
-                                className="block text-gray-700 text-sm font-bold mb-1"
-                                htmlFor="newTaskDue"
-                            >
-                                Priority
-                            </label>
-                            <select
-                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-200 bg-transparent mr-2 placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
-                                id="newTaskDue"
-                                name="newTaskDue"
-                                value={
-                                    newTask.tPriority ? newTask.tPriority : ""
-                                }
-                                onChange={(e) =>
-                                    setNewTask({
-                                        ...newTask,
-                                        tPriority: e.target.value,
-                                    })
-                                }
-                                required
-                            >
-                                <option value="">Select Priority</option>
-                                <option value="None">None</option>
-                                <option value="Low">Low Priority</option>
-                                <option value="Medium">Medium Priority</option>
-                                <option value="High">High Priority</option>
-                            </select>
-                        </div>
-                        {isEditMode ? (
-                            <button
-                                type="submit"
-                                className="bg-black text-white px-3 py-2 rounded-full text-xs font-semibold tracking-wider"
-                            >
-                                Update Task
-                            </button>
-                        ) : (
-                            <button
-                                type="submit"
-                                className="bg-black text-white px-3 py-2 rounded-full text-xs font-semibold tracking-wider"
-                            >
-                                Submit Task
-                            </button>
-                        )}
-                        <button
-                            onClick={() => {
-                                deleteTask();
-                                closeTaskModal();
-                            }}
-                            className="flex gap-x-1 text-zinc-900 bg-red-100  px-3 py-2 rounded-full items-center absolute bottom-8 left-11  text-sm font-semibold tracking-wider"
-                        >
-                            <div className="">
-                                <Trash2
-                                    color="#EF4444"
-                                    size={16}
-                                    strokeWidth={1.5}
-                                />
-                            </div>
-                            <p className="text-zinc-900 tracking-tight">
-                                Delete Task
-                            </p>
-                        </button>
-                    </form>
-                    {/* Modal Check Form */}
-                    <form
-                        onSubmit={submitNewCheck}
-                        className="relative p-8 w-1/2 bg-zinc-900 rounded-md"
-                    >
-                        <div className="mb-4 items">
-                            <label
-                                className="block text-white text-sm font-bold mb-1"
-                                for="newCheckName"
-                            >
-                                New Check Name
-                            </label>
-                            <div className="flex">
-                                <input
-                                    className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-500 bg-transparent mr-2 placeholder:text-gray-600  text-white leading-tight focus:outline-none focus:shadow-outline"
-                                    id="newCheckName"
-                                    name="newCheckName"
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Call the client, Send an email..."
-                                    onChange={(e) =>
-                                        setNewCheck({
-                                            ...newCheck,
-                                            cName: e.target.value,
-                                        })
-                                    }
-                                />
-                                <button
-                                    type="submit"
-                                    className="flex  text-xs px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-full text-white "
-                                >
-                                    <Plus size={16} strokeWidth={1.5} />{" "}
-                                    <p>Add</p>
-                                </button>
-                            </div>
-                        </div>
-                        <div className="flex gap-x-6 items-end">
-                            <div className="mb-4 w-1/2">
-                                <label
-                                    className="block text-white text-sm font-bold mb-1"
-                                    for="newTaskDue"
-                                >
-                                    Check Due
-                                </label>
-                                <input
-                                    className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-700 bg-transparent mr-2 placeholder:text-gray-600  text-white leading-tight focus:outline-none focus:shadow-outline"
-                                    id="newTaskDue"
-                                    name="newTaskDue"
-                                    type="date"
-                                    placeholder="Select Due Date"
-                                    onChange={(e) =>
-                                        setNewCheck({
-                                            ...newCheck,
-                                            cDue: e.target.value,
-                                        })
-                                    }
-                                />
-                            </div>
+                                    <div className="text-lg text-text font-semibold">
+                                        Boards
+                                    </div>
+                                </div>
 
-                            <div className="mb-4 w-1/2">
-                                <label
-                                    className="block text-white text-sm font-bold mb-1"
-                                    htmlFor="newTaskDue"
-                                >
-                                    Check complete?
-                                </label>
-                                <select
-                                    id="checkCompleted"
-                                    name="checkCompleted"
-                                    className="py-0.5 pl-2 text-sm w-full mb-0.5 text-white appearance-none border-b border-gray-700 bg-transparent mr-2 placeholder:text-gray-600 leading-tight focus:outline-none focus:shadow-outline"
-                                    onChange={(e) =>
-                                        setNewCheck({
-                                            ...newCheck,
-                                            cCompleted:
-                                                e.target.value === "true",
-                                        })
-                                    }
-                                >
-                                    <option
-                                        value={false}
-                                        className="text-black"
-                                    >
-                                        Uncompleted
-                                    </option>
-                                    <option value={true} className="text-black">
-                                        Complete
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className=" px-2 py-2 rounded-md border border-gray-800 overflow-y-auto h-[250px]">
-                            {isEditMode ? (
-                                <>
-                                    <Reorder.Group
-                                        axis="y"
-                                        values={sortedChecks}
-                                        onReorder={(reorderedChecks) => {
-                                            const updatedChecks =
-                                                reorderedChecks.map(
-                                                    (check, index) => ({
-                                                        ...check,
-                                                        cOrder: index + 1,
+                                <div className="flex gap-x-2 items-center ">
+                                    {boardsLocked ? (
+                                        <button
+                                            onClick={() =>
+                                                setBoardsLocked(false)
+                                            }
+                                            className="flex justify-center bg-text items-center cursor-pointer h-[34px] w-[34px] text-zinc-400 p-1 rounded-full text-xs font-semibold tracking-wider"
+                                        >
+                                            <Lock
+                                                color="#ffffff"
+                                                size={18}
+                                                strokeWidth={1.5}
+                                                noMargin
+                                            />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() =>
+                                                setBoardsLocked(true)
+                                            }
+                                            className="flex justify-center bg-zinc-900 items-center cursor-pointer h-[34px] w-[34px] text-zinc-400 p-1 rounded-full text-xs font-semibold tracking-wider"
+                                        >
+                                            <LockOpen
+                                                color="#ffffff"
+                                                size={18}
+                                                strokeWidth={1.5}
+                                                noMargin
+                                            />
+                                        </button>
+                                    )}
+                                    {addBoard ? (
+                                        <form
+                                            onSubmit={submitNewBoard}
+                                            className="flex items-center gap-x-1"
+                                        >
+                                            <button
+                                                type="submit"
+                                                className="bg-black whitespace-nowrap h-[34px] px-4 text-white rounded-full font-semibold tracking-wide"
+                                            >
+                                                Add Board
+                                            </button>
+                                            <input
+                                                className="h-9 appearance-none rounded-full w-full px-4 pr-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                                id="username"
+                                                name="username"
+                                                type="text"
+                                                placeholder="Enter New Board Name"
+                                                required
+                                                value={newBoard.name}
+                                                onChange={(e) =>
+                                                    setNewBoard({
+                                                        ...newBoard,
+                                                        bName: e.target.value,
                                                     })
-                                                );
-
-                                            setChecks((prevChecks) => ({
-                                                ...prevChecks,
-                                                [selectedTask]: updatedChecks,
-                                            }));
-
-                                            updateChecksOrderInDatabase(
-                                                selectedBoard,
-                                                updatedChecks
-                                            );
-                                        }}
-                                    >
-                                        {checks[selectedTask]?.map(
-                                            (check, index) => (
-                                                <Reorder.Item
-                                                    key={check.id}
-                                                    value={check}
+                                                }
+                                            />
+                                            <button
+                                                onClick={() =>
+                                                    setAddBoard(false)
+                                                }
+                                                className="whitespace-nowrap text-white my-2.5  rounded-full font-semibold tracking-wide"
+                                            >
+                                                <CircleX
+                                                    color="#c9c9c9"
+                                                    size={20}
+                                                    strokeWidth={1.5}
+                                                    noMargin
+                                                />
+                                            </button>
+                                        </form>
+                                    ) : (
+                                        <button
+                                            onClick={() => setAddBoard(true)}
+                                            className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide"
+                                        >
+                                            New Board
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
+                        </div>
+                        {boardsLocked ? (
+                            <div className="flex gap-4  h-full">
+                                {boards
+                                    .sort((a, b) => a.bOrder - b.bOrder)
+                                    .map((board, index) => (
+                                        <BoardsComponent
+                                            key={board.id}
+                                            board={board}
+                                        />
+                                    ))}
+                            </div>
+                        ) : (
+                            <Reorder.Group
+                                axis="x"
+                                values={boards}
+                                onReorder={(boards) => {
+                                    const updatedBoards = boards.map(
+                                        (board, index) => ({
+                                            ...board,
+                                            bOrder: index + 1,
+                                        })
+                                    );
+                                    setBoards(updatedBoards);
+                                    updateBoardsOrderinDatabase(updatedBoards);
+                                }}
+                            >
+                                <div className="flex gap-4 overflow-x-auto">
+                                    {boards
+                                        .sort((a, b) => a.bOrder - b.bOrder)
+                                        .map((board, index) => (
+                                            <Reorder.Item
+                                                key={board.id}
+                                                value={board}
+                                            >
+                                                <BoardsComponent
+                                                    board={board}
+                                                />
+                                            </Reorder.Item>
+                                        ))}
+                                </div>
+                            </Reorder.Group>
+                        )}
+                        <Modal
+                            size={1000}
+                            radius={"md"}
+                            opened={taskModal}
+                            onClose={() => {
+                                closeTaskModal();
+                                setNewTask({});
+                            }}
+                            centered
+                            withCloseButton={false}
+                            padding={0}
+                            closeOnClickOutside={true}
+                        >
+                            <div className="flex">
+                                {/* Modal Task Form  */}
+                                <form
+                                    class="newTask"
+                                    onSubmit={
+                                        isEditMode
+                                            ? submitEditTask
+                                            : submitNewTask
+                                    }
+                                    className="border-zinc-100  w-1/2 p-8 "
+                                >
+                                    <div className="flex flex-col justify-between h-full">
+                                        <div>
+                                            <div className="mb-4">
+                                                <p className="block text-zinc-900 text-lg font-bold mb-4">
+                                                    {modalTitle}
+                                                </p>
+                                                <label
+                                                    className="block text-gray-700 text-sm font-bold mb-1"
+                                                    for="newTaskName"
                                                 >
-                                                    <div
-                                                        key={index}
-                                                        onMouseOver={() =>
-                                                            setSelectedCheck(
-                                                                check.id
-                                                            )
-                                                        }
+                                                    Task Name
+                                                </label>
+                                                <input
+                                                    className="h-8 pl-2 text-sm w-full  border-b border-gray-200 bg-transparent  placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
+                                                    id="newTaskName"
+                                                    name="newTaskName"
+                                                    type="text"
+                                                    value={
+                                                        newTask.tName
+                                                            ? newTask.tName
+                                                            : ""
+                                                    }
+                                                    placeholder="Enter New Task Name"
+                                                    onChange={(e) =>
+                                                        setNewTask({
+                                                            ...newTask,
+                                                            tName: e.target
+                                                                .value,
+                                                        })
+                                                    }
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="mb-4">
+                                                <label
+                                                    className="block text-gray-700 text-sm font-bold mb-1"
+                                                    for="newTaskDesc"
+                                                >
+                                                    Task Description
+                                                </label>
+                                                <input
+                                                    className="h-8 pl-2 text-sm w-full  border-b border-gray-200 bg-transparent placeholder:text-gray-300  text-black leading-tight focus:outline-none focus:shadow-outline"
+                                                    id="newTaskDesc"
+                                                    name="newTaskDesc"
+                                                    type="text"
+                                                    value={
+                                                        newTask.tDesc
+                                                            ? newTask.tDesc
+                                                            : ""
+                                                    }
+                                                    placeholder="Enter New Task Description"
+                                                    onChange={(e) =>
+                                                        setNewTask({
+                                                            ...newTask,
+                                                            tDesc: e.target
+                                                                .value,
+                                                        })
+                                                    }
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex gap-6 ">
+                                                <div className="mb-4 w-1/2">
+                                                    <label
+                                                        className="block text-gray-700 text-sm font-bold mb-1"
+                                                        for="newTaskDue"
                                                     >
-                                                        <div className="flex items-start gap-1 px-1 rounded-full justify-between cursor-ns-resize">
-                                                            <div className="">
-                                                                <p
-                                                                    className={`text-[13px]  leading-4 ${
-                                                                        check.cCompleted
-                                                                            ? "line-through text-zinc-400"
-                                                                            : "text-white"
-                                                                    }`}
-                                                                >
-                                                                    {
-                                                                        check.cName
-                                                                    }
-                                                                </p>
-                                                                <div className="text-[12px] text-zinc-500 -mt-1">
-                                                                    Due:{" "}
-                                                                    {check.cDue}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex gap-x-1 items-center cursor-pointer">
-                                                                <div>
-                                                                    {check.cCompleted ? (
-                                                                        <div
-                                                                            onClick={() =>
-                                                                                toggleCheckCompletion(
-                                                                                    selectedTask,
-                                                                                    check.id,
-                                                                                    check.cCompleted
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <CircleCheck
-                                                                                color="#0be345"
-                                                                                size={
-                                                                                    20
-                                                                                }
-                                                                                strokeWidth={
-                                                                                    1.5
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div
-                                                                            onClick={() =>
-                                                                                toggleCheckCompletion(
-                                                                                    selectedTask,
-                                                                                    check.id,
-                                                                                    check.cCompleted
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <Circle
-                                                                                color="#a3a3a3"
-                                                                                size={
-                                                                                    20
-                                                                                }
-                                                                                strokeWidth={
-                                                                                    1.5
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                        Task Due
+                                                    </label>
+                                                    <DatePickerInput
+                                                        placeholder="Select date"
+                                                        clearable
+                                                        valueFormat="DD MMMM YYYY"
+                                                        value={
+                                                            newTask.tDue
+                                                                ? new Date(
+                                                                      newTask.tDue
+                                                                  )
+                                                                : null
+                                                        } // Ensure value is a Date object or null
+                                                        onChange={(date) =>
+                                                            setNewTask({
+                                                                ...newTask,
+                                                                tDue: date
+                                                                    ? date.toISOString()
+                                                                    : "", // Save date as ISO string or clear
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="mb-4 w-1/2">
+                                                    <label
+                                                        className="block text-gray-700 text-sm font-bold mb-1"
+                                                        htmlFor="newTaskDue"
+                                                    >
+                                                        Task Priority
+                                                    </label>
+                                                    <Select
+                                                        placeholder="Select Priority"
+                                                        clearable
+                                                        value={
+                                                            newTask.tPriority ||
+                                                            ""
+                                                        }
+                                                        onChange={(value) =>
+                                                            setNewTask({
+                                                                ...newTask,
+                                                                tPriority:
+                                                                    value, // 'value' is a single selected option (string)
+                                                            })
+                                                        }
+                                                        data={[
+                                                            {
+                                                                value: "None",
+                                                                label: "None",
+                                                            },
+                                                            {
+                                                                value: "Low",
+                                                                label: "Low",
+                                                            },
+                                                            {
+                                                                value: "Medium",
+                                                                label: "Medium",
+                                                            },
+                                                            {
+                                                                value: "High",
+                                                                label: "High",
+                                                            },
+                                                        ]}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between w-full">
+                                            {isEditMode ? (
+                                                <button
+                                                    type="submit"
+                                                    className="flex gap-x-1 text-zinc-900 bg-zinc-900 px-3 py-2 rounded-full items-center text-sm font-semibold tracking-wider"
+                                                >
+                                                    <p className="text-white tracking-tight">
+                                                        Update Task
+                                                    </p>
+                                                    <div className="">
+                                                        <Check
+                                                            color="#ffffff"
+                                                            size={16}
+                                                            strokeWidth={1.5}
+                                                        />
+                                                    </div>
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    type="submit"
+                                                    className="flex gap-x-1 bg-black text-white px-3 py-2 rounded-full text-sm font-semibold tracking-wider"
+                                                >
+                                                    <p className="text-white tracking-tight">
+                                                        Confirm New Task
+                                                    </p>
+                                                    <div className="">
+                                                        <BetweenHorizonalStart
+                                                            color="#ffffff"
+                                                            size={16}
+                                                            strokeWidth={1.5}
+                                                        />
+                                                    </div>
+                                                </button>
+                                            )}
+                                            {isEditMode && (
+                                                <button
+                                                    onClick={() => {
+                                                        deleteTask();
+                                                        closeTaskModal();
+                                                    }}
+                                                    className="flex gap-x-1 text-zinc-900 bg-zinc-900  px-3 py-2 rounded-full items-center text-sm font-semibold tracking-wider"
+                                                >
+                                                    <p className="text-white tracking-tight">
+                                                        Delete Task
+                                                    </p>
+                                                    <div className="">
+                                                        <Trash2
+                                                            color="#ffffff"
+                                                            size={16}
+                                                            strokeWidth={1.5}
+                                                        />
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </form>
+                                {/* Modal Check Form */}
+                                <form
+                                    onSubmit={submitNewCheck}
+                                    className="relative p-8 w-1/2 bg-zinc-900"
+                                >
+                                    <div className="mb-4 items">
+                                        <div className="flex justify-between">
+                                            <label
+                                                className="block text-white text-lg font-bold mb-4"
+                                                for="newCheckName"
+                                            >
+                                                Update Check Details
+                                            </label>
+                                            <div
+                                                onClick={() => closeTaskModal()}
+                                                className="cursor-pointer text-zinc-300 hover:text-white"
+                                            >
+                                                <X
+                                                    size={18}
+                                                    strokeWidth={3}
+                                                    className="cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                        <label
+                                            className="block text-white text-sm font-bold mb-1"
+                                            for="newTaskName"
+                                        >
+                                            Add New Check
+                                        </label>
+                                        <div className="flex">
+                                            <input
+                                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-500 bg-transparent mr-2 placeholder:text-gray-600  text-white leading-tight focus:outline-none focus:shadow-outline"
+                                                id="newCheckName"
+                                                name="newCheckName"
+                                                type="text"
+                                                required
+                                                placeholder="e.g. Call the client, Send an email..."
+                                                onChange={(e) =>
+                                                    setNewCheck({
+                                                        ...newCheck,
+                                                        cName: e.target.value,
+                                                    })
+                                                }
+                                            />
+                                            <button
+                                                type="submit"
+                                                className="flex  text-xs px-4 h-8 items-center bg-gray-800 hover:bg-gray-700 rounded-full text-white "
+                                            >
+                                                <Plus
+                                                    size={16}
+                                                    strokeWidth={1.5}
+                                                />{" "}
+                                                <p>Add</p>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-x-6 items-end">
+                                        <div className="mb-4 w-1/2">
+                                            <label
+                                                className="block text-white  text-sm font-bold mb-1"
+                                                for="newTaskDue"
+                                            >
+                                                Check Due
+                                            </label>
+                                            <DatePickerInput
+                                                placeholder="Select date"
+                                                clearable
+                                                valueFormat="DD MMMM YYYY"
+                                                onChange={(date) =>
+                                                    setNewCheck({
+                                                        ...newCheck,
+                                                        cDue: date
+                                                            ? moment(
+                                                                  date
+                                                              ).format(
+                                                                  "DD-MM-YYYY"
+                                                              )
+                                                            : "",
+                                                    })
+                                                }
+                                                styles={{
+                                                    input: {
+                                                        backgroundColor:
+                                                            "#18181B",
+                                                        borderColor: "#212c3b",
+                                                        color: "#ffffff",
+                                                    },
+                                                    placeholder: {
+                                                        color: "#4a4e66", // Placeholder text color (gray)
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="mb-4 w-1/2">
+                                            <label
+                                                className="block text-white text-sm font-bold mb-1"
+                                                htmlFor="newTaskDue"
+                                            >
+                                                Check complete?
+                                            </label>
+                                            <Select
+                                                placeholder="Select Status"
+                                                clearable
+                                                value={
+                                                    newCheck.cCompleted
+                                                        ? "true"
+                                                        : newCheck.cCompleted ===
+                                                          false
+                                                        ? "false"
+                                                        : ""
+                                                } // Show placeholder or selected value
+                                                onChange={(value) =>
+                                                    setNewCheck({
+                                                        ...newCheck,
+                                                        cCompleted:
+                                                            value === "true", // Convert string to boolean
+                                                    })
+                                                }
+                                                data={[
+                                                    {
+                                                        value: "false",
+                                                        label: "Uncompleted",
+                                                    },
+                                                    {
+                                                        value: "true",
+                                                        label: "Completed",
+                                                    },
+                                                ]}
+                                                styles={{
+                                                    input: {
+                                                        backgroundColor:
+                                                            "#18181B",
+                                                        borderColor: "#212c3b",
+                                                        color: "#ffffff",
+                                                    },
+                                                    placeholder: {
+                                                        color: "#4a4e66", // Placeholder text color (gray)
+                                                    },
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className=" px-2 py-2 rounded-md border border-gray-800 overflow-y-auto h-[250px]">
+                                        {isEditMode ? (
+                                            <>
+                                                <Reorder.Group
+                                                    axis="y"
+                                                    values={sortedChecks}
+                                                    onReorder={(
+                                                        reorderedChecks
+                                                    ) => {
+                                                        const updatedChecks =
+                                                            reorderedChecks.map(
+                                                                (
+                                                                    check,
+                                                                    index
+                                                                ) => ({
+                                                                    ...check,
+                                                                    cOrder:
+                                                                        index +
+                                                                        1,
+                                                                })
+                                                            );
+
+                                                        setChecks(
+                                                            (prevChecks) => ({
+                                                                ...prevChecks,
+                                                                [selectedTask]:
+                                                                    updatedChecks,
+                                                            })
+                                                        );
+
+                                                        updateChecksOrderInDatabase(
+                                                            selectedBoard,
+                                                            updatedChecks
+                                                        );
+                                                    }}
+                                                >
+                                                    {checks[selectedTask]?.map(
+                                                        (check, index) => (
+                                                            <Reorder.Item
+                                                                key={check.id}
+                                                                value={check}
+                                                            >
                                                                 <div
-                                                                    onClick={() =>
-                                                                        deleteCheck(
+                                                                    key={index}
+                                                                    onMouseOver={() =>
+                                                                        setSelectedCheck(
                                                                             check.id
                                                                         )
                                                                     }
-                                                                    className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
                                                                 >
-                                                                    <X
-                                                                        size={
-                                                                            14
-                                                                        }
-                                                                        strokeWidth={
-                                                                            3
-                                                                        }
-                                                                        className="cursor-pointer"
-                                                                    />
+                                                                    <div className="flex items-start gap-1 px-1 rounded-full justify-between cursor-ns-resize">
+                                                                        <div className="">
+                                                                            <p
+                                                                                className={`text-[13px] break-words leading-4 ${
+                                                                                    check.cCompleted
+                                                                                        ? "line-through text-zinc-400"
+                                                                                        : "text-white"
+                                                                                }`}
+                                                                            >
+                                                                                {
+                                                                                    check.cName
+                                                                                }
+                                                                            </p>
+                                                                            <div className="text-[12px] text-zinc-500 -mt-1">
+                                                                                Due:{" "}
+                                                                                {moment(
+                                                                                    check.cDue
+                                                                                ).format(
+                                                                                    "DD-MMM-YY"
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex gap-x-1 items-center cursor-pointer">
+                                                                            <div>
+                                                                                {check.cCompleted ? (
+                                                                                    <div
+                                                                                        onClick={() =>
+                                                                                            toggleCheckCompletion(
+                                                                                                selectedTask,
+                                                                                                check.id,
+                                                                                                check.cCompleted
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        <CircleCheck
+                                                                                            color="#0be345"
+                                                                                            size={
+                                                                                                20
+                                                                                            }
+                                                                                            strokeWidth={
+                                                                                                1.5
+                                                                                            }
+                                                                                        />
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    <div
+                                                                                        onClick={() =>
+                                                                                            toggleCheckCompletion(
+                                                                                                selectedTask,
+                                                                                                check.id,
+                                                                                                check.cCompleted
+                                                                                            )
+                                                                                        }
+                                                                                    >
+                                                                                        <Circle
+                                                                                            color="#a3a3a3"
+                                                                                            size={
+                                                                                                20
+                                                                                            }
+                                                                                            strokeWidth={
+                                                                                                1.5
+                                                                                            }
+                                                                                        />
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                            <div
+                                                                                onClick={() =>
+                                                                                    deleteCheck(
+                                                                                        check.id
+                                                                                    )
+                                                                                }
+                                                                                className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
+                                                                            >
+                                                                                <X
+                                                                                    size={
+                                                                                        14
+                                                                                    }
+                                                                                    strokeWidth={
+                                                                                        3
+                                                                                    }
+                                                                                    className="cursor-pointer"
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Reorder.Item>
-                                            )
+                                                            </Reorder.Item>
+                                                        )
+                                                    )}
+                                                </Reorder.Group>
+                                            </>
+                                        ) : (
+                                            <></>
                                         )}
-                                    </Reorder.Group>
-                                </>
-                            ) : (
-                                <></>
-                            )}
-                        </div>
-                    </form>
-                </div>
-            </Modal>
-            <Modal
-                size={500}
-                radius={"md"}
-                title={
-                    <h1
-                        style={{
-                            fontSize: "1.2rem",
-                            fontWeight: "bold",
-                            paddingLeft: "1rem",
-                            paddingTop: "0.6rem",
-                        }}
-                    >
-                        Delete Board
-                    </h1>
-                }
-                opened={deleteBoardModal}
-                onClose={() => {
-                    closeDeleteBoardModal();
-                }}
-                centered
-                closeOnClickOutside={true}
-            >
-                <div className="px-4">
-                    <div className="text-[16px] mb-4">
-                        <p>
-                            Are you sure you want to delete the board &quot;
-                            {boardName}&quot;?
-                        </p>
-                        <p className="">
-                            This action cannot be undone. {"  "}Type{"  "}
-                            <strong>&apos;Delete&apos;</strong> to confirm.
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            className="w-full h-9 border border-zinc-400 rounded-full px-4"
-                            onChange={(e) => {
-                                setConfirmDelete(e.target.value);
+                                    </div>
+                                </form>
+                            </div>
+                        </Modal>
+                        <Modal
+                            size={500}
+                            radius={"md"}
+                            title={
+                                <h1
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Delete Board
+                                </h1>
+                            }
+                            opened={deleteBoardModal}
+                            onClose={() => {
+                                closeDeleteBoardModal();
                             }}
-                        ></input>
-                        <button
-                            onClick={() => {
-                                if (confirmDelete === "Delete") {
-                                    deleteBoard();
-                                    closeDeleteBoardModal();
-                                }
-                            }}
-                            className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                            centered
+                            closeOnClickOutside={true}
                         >
-                            Confirm
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-            {/* <button onClick={() => console.log()} className="bg-blue-500 p-4">
+                            <div className="px-4">
+                                <div className="text-[15.5px] mb-4">
+                                    <p className="mb-2">
+                                        You are about to delete the board:
+                                    </p>
+                                    <p className="mb-2">
+                                        &quot;<strong>{boardName}</strong>
+                                        &quot;
+                                    </p>
+                                    <p className="">
+                                        This action cannot be undone. {"  "}Type
+                                        {"  "}
+                                        <strong>&apos;Delete&apos;</strong> to
+                                        confirm.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <input
+                                        type="text"
+                                        className="w-full h-9 border border-zinc-400 rounded-full px-4"
+                                        onChange={(e) => {
+                                            setConfirmDelete(e.target.value);
+                                        }}
+                                    ></input>
+                                    <button
+                                        onClick={() => {
+                                            if (confirmDelete === "Delete") {
+                                                deleteBoard();
+                                                closeDeleteBoardModal();
+                                            }
+                                        }}
+                                        className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                        <Modal
+                            size={500}
+                            radius={"md"}
+                            title={
+                                <h1
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Rename Board
+                                </h1>
+                            }
+                            opened={renameBoardModal}
+                            onClose={() => {
+                                closeRenameBoardModal();
+                            }}
+                            centered
+                            closeOnClickOutside={true}
+                        >
+                            <div className="px-4">
+                                <div className="text-[15.5px] mb-4">
+                                    <p className="mb-2">
+                                        Modify the name of the board:
+                                    </p>
+                                    <p className="mb-2">
+                                        &quot;
+                                        <strong>{boardName}</strong>&quot;
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <input
+                                        type="text"
+                                        value={renamedBoard}
+                                        onChange={(e) => {
+                                            setRenamedBoard(e.target.value);
+                                        }}
+                                        className="w-full h-9 border border-zinc-400 rounded-full px-4"
+                                    ></input>
+                                    <button
+                                        onClick={() => {
+                                            renameBoard(renamedBoard);
+                                            closeRenameBoardModal();
+                                        }}
+                                        className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                        {/* <button onClick={() => console.log()} className="bg-blue-500 p-4">
         TEST
       </button> */}
-        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="flex items-center justify-center w-full h-full">
+                    <ClipLoader
+                        color={color}
+                        loading={loading}
+                        cssOverride={override}
+                        size={46}
+                        aria-label="Loading Spinner"
+                        data-testid="loader"
+                    />
+                </div>
+            )}
+        </>
     );
 }
