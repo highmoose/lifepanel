@@ -14,9 +14,8 @@ import {
     writeBatch,
     query,
 } from "firebase/firestore";
-import DateFormatter from "../functional/dateFormatter";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Progress, Select } from "@mantine/core";
+import { Modal, Progress, Select, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import moment from "moment";
 import { auth } from "../../src/app/firebase/config";
@@ -34,6 +33,7 @@ import {
     Lock,
     LockOpen,
     MoveHorizontal,
+    Pencil,
     Plus,
     PlusIcon,
     TextCursorInput,
@@ -81,6 +81,21 @@ export default function Dashboard(user) {
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
 
+    const [editCheck, setEditCheck] = useState([]);
+    const [updatedCheck, setUpdatedCheck] = useState({});
+
+    const [projectsLoaded, setProjectsLoaded] = useState(false);
+
+    const [selectedBoard, setSelectedBoard] = useState();
+    const [selectedTask, setSelectedTask] = useState();
+    const [selectedCheck, setSelectedCheck] = useState();
+
+    const selectedChecks = Array.isArray(checks[selectedTask])
+        ? checks[selectedTask]
+        : [];
+
+    const sortedChecks = selectedChecks.sort((a, b) => a.cOrder - b.cOrder);
+
     const [loading, setLoading] = useState(true);
     const [color, setColor] = useState("#F87315");
 
@@ -104,18 +119,6 @@ export default function Dashboard(user) {
         cCreated: "",
         cCompleted: "",
     });
-
-    const [projectsLoaded, setProjectsLoaded] = useState(false);
-
-    const [selectedBoard, setSelectedBoard] = useState();
-    const [selectedTask, setSelectedTask] = useState();
-    const [selectedCheck, setSelectedCheck] = useState();
-
-    const selectedChecks = Array.isArray(checks[selectedTask])
-        ? checks[selectedTask]
-        : [];
-
-    const sortedChecks = selectedChecks.sort((a, b) => a.cOrder - b.cOrder);
 
     const getProjectData = async () => {
         await fetchBoardsData();
@@ -261,6 +264,27 @@ export default function Dashboard(user) {
                 error
             );
         }
+    };
+
+    const modifyCheck = async (check) => {
+        try {
+            const checkDocRef = doc(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "boards",
+                selectedBoard,
+                "tasks",
+                selectedTask,
+                "checks",
+                check.id
+            );
+            await updateDoc(checkDocRef, { cName: updatedCheck });
+            console.log("Check updated successfully!");
+        } catch (error) {
+            console.error("Error updating check: ", error);
+        }
+        fetchChecks(selectedBoard, selectedTask);
     };
 
     const toggleCheckListOpen = (taskId) => {
@@ -1545,89 +1569,180 @@ export default function Dashboard(user) {
                                                                     }
                                                                 >
                                                                     <div className="flex items-start gap-1 px-1 rounded-full justify-between cursor-ns-resize">
-                                                                        <div className="">
-                                                                            <p
-                                                                                className={`text-[13px] break-words leading-4 ${
-                                                                                    check.cCompleted
-                                                                                        ? "line-through text-zinc-400"
-                                                                                        : "text-white"
-                                                                                }`}
-                                                                            >
-                                                                                {
-                                                                                    check.cName
-                                                                                }
-                                                                            </p>
-                                                                            <div className="text-[12px] text-zinc-500 -mt-1">
-                                                                                Due:{" "}
-                                                                                {moment(
-                                                                                    check.cDue
-                                                                                ).format(
-                                                                                    "DD-MMM-YY"
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex gap-x-1 items-center cursor-pointer">
-                                                                            <div>
-                                                                                {check.cCompleted ? (
-                                                                                    <div
-                                                                                        onClick={() =>
-                                                                                            toggleCheckCompletion(
-                                                                                                selectedTask,
-                                                                                                check.id,
-                                                                                                check.cCompleted
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <CircleCheck
-                                                                                            color="#0be345"
-                                                                                            size={
-                                                                                                20
-                                                                                            }
-                                                                                            strokeWidth={
-                                                                                                1.5
-                                                                                            }
-                                                                                        />
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <div
-                                                                                        onClick={() =>
-                                                                                            toggleCheckCompletion(
-                                                                                                selectedTask,
-                                                                                                check.id,
-                                                                                                check.cCompleted
-                                                                                            )
-                                                                                        }
-                                                                                    >
-                                                                                        <Circle
-                                                                                            color="#a3a3a3"
-                                                                                            size={
-                                                                                                20
-                                                                                            }
-                                                                                            strokeWidth={
-                                                                                                1.5
-                                                                                            }
-                                                                                        />
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                            <div
-                                                                                onClick={() =>
-                                                                                    deleteCheck(
-                                                                                        check.id
-                                                                                    )
-                                                                                }
-                                                                                className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
-                                                                            >
-                                                                                <X
-                                                                                    size={
-                                                                                        14
+                                                                        {editCheck ===
+                                                                        check.id ? (
+                                                                            <div className="w-full pb-2">
+                                                                                <Textarea
+                                                                                    value={
+                                                                                        updatedCheck
                                                                                     }
-                                                                                    strokeWidth={
-                                                                                        3
+                                                                                    onChange={(
+                                                                                        e
+                                                                                    ) =>
+                                                                                        setUpdatedCheck(
+                                                                                            e
+                                                                                                .target
+                                                                                                .value
+                                                                                        )
                                                                                     }
-                                                                                    className="cursor-pointer"
+                                                                                    styles={{
+                                                                                        input: {
+                                                                                            backgroundColor:
+                                                                                                "#18181B",
+                                                                                            borderColor:
+                                                                                                "#212c3b",
+                                                                                            color: "#ffffff",
+                                                                                        },
+                                                                                        placeholder:
+                                                                                            {
+                                                                                                color: "#4a4e66", // Placeholder text color (gray)
+                                                                                            },
+                                                                                    }}
                                                                                 />
+                                                                                {console.log(
+                                                                                    "updatedCheck",
+                                                                                    updatedCheck
+                                                                                )}
                                                                             </div>
+                                                                        ) : (
+                                                                            <div className="">
+                                                                                <p
+                                                                                    className={`text-[13px] break-words leading-4 ${
+                                                                                        check.cCompleted
+                                                                                            ? "line-through text-zinc-400"
+                                                                                            : "text-white"
+                                                                                    }`}
+                                                                                >
+                                                                                    {
+                                                                                        check.cName
+                                                                                    }
+                                                                                </p>
+                                                                                <div className="text-[12px] text-zinc-500 -mt-1">
+                                                                                    Due:{" "}
+                                                                                    {moment(
+                                                                                        check.cDue
+                                                                                    ).format(
+                                                                                        "DD-MMM-YY"
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        <div className="flex flex-col gap-x-1 gap-y-2 items-center ">
+                                                                            <div className="flex gap-x-1 cursor-pointer">
+                                                                                <div>
+                                                                                    {check.cCompleted ? (
+                                                                                        <div
+                                                                                            onClick={() =>
+                                                                                                toggleCheckCompletion(
+                                                                                                    selectedTask,
+                                                                                                    check.id,
+                                                                                                    check.cCompleted
+                                                                                                )
+                                                                                            }
+                                                                                        >
+                                                                                            <CircleCheck
+                                                                                                color="#0be345"
+                                                                                                size={
+                                                                                                    20
+                                                                                                }
+                                                                                                strokeWidth={
+                                                                                                    1.5
+                                                                                                }
+                                                                                            />
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <div
+                                                                                            className="text-zinc-400 hover:text-white"
+                                                                                            onClick={() =>
+                                                                                                toggleCheckCompletion(
+                                                                                                    selectedTask,
+                                                                                                    check.id,
+                                                                                                    check.cCompleted
+                                                                                                )
+                                                                                            }
+                                                                                        >
+                                                                                            <Circle
+                                                                                                size={
+                                                                                                    20
+                                                                                                }
+                                                                                                strokeWidth={
+                                                                                                    1.5
+                                                                                                }
+                                                                                            />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div
+                                                                                    onClick={() => {
+                                                                                        setEditCheck(
+                                                                                            check.id
+                                                                                        );
+                                                                                        setUpdatedCheck(
+                                                                                            check.cName
+                                                                                        );
+                                                                                    }}
+                                                                                    className={`${
+                                                                                        editCheck ===
+                                                                                        check.id
+                                                                                            ? "text-white"
+                                                                                            : "text-zinc-400"
+                                                                                    } hover:text-white -ml-0.5`}
+                                                                                >
+                                                                                    <Pencil
+                                                                                        size={
+                                                                                            20
+                                                                                        }
+                                                                                        strokeWidth={
+                                                                                            1.5
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                                <div
+                                                                                    onClick={() =>
+                                                                                        deleteCheck(
+                                                                                            check.id
+                                                                                        )
+                                                                                    }
+                                                                                    className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
+                                                                                >
+                                                                                    <X
+                                                                                        size={
+                                                                                            14
+                                                                                        }
+                                                                                        strokeWidth={
+                                                                                            3
+                                                                                        }
+                                                                                        className="cursor-pointer"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                            {editCheck ===
+                                                                                check.id && (
+                                                                                <button
+                                                                                    onClick={(
+                                                                                        event
+                                                                                    ) => {
+                                                                                        event.preventDefault();
+                                                                                        modifyCheck(
+                                                                                            check
+                                                                                        );
+                                                                                        setEditCheck(
+                                                                                            false
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex  text-xs px-2 h-6 gap-x-0.5 items-center bg-gray-800 hover:bg-gray-700 rounded-full text-white "
+                                                                                >
+                                                                                    <p>
+                                                                                        Save
+                                                                                    </p>
+                                                                                    <Check
+                                                                                        size={
+                                                                                            16
+                                                                                        }
+                                                                                    />
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1756,9 +1871,6 @@ export default function Dashboard(user) {
                                 </div>
                             </div>
                         </Modal>
-                        {/* <button onClick={() => console.log()} className="bg-blue-500 p-4">
-        TEST
-      </button> */}
                     </div>
                 </>
             ) : (
