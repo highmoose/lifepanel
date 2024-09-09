@@ -997,8 +997,8 @@ export default function Dashboard(user) {
                 </div>
                 {notesOpen === task.id && (
                     <div
-                        className={`w-full mt-3 ${
-                            checkListOpen[task.id] ? "mb-1 py-2" : "mb-3"
+                        className={`w-full mt-3 mb-2 ${
+                            checkListOpen[task.id] ? "mb-1 " : "mb-3"
                         } `}
                     >
                         <div className="flex gap-x-1">
