@@ -33,6 +33,7 @@ import {
     Lock,
     LockOpen,
     MoveHorizontal,
+    NotebookPen,
     Pencil,
     Plus,
     PlusIcon,
@@ -84,6 +85,8 @@ export default function Dashboard(user) {
     const [editCheck, setEditCheck] = useState([]);
     const [updatedCheck, setUpdatedCheck] = useState({});
 
+    const [notesOpen, setNotesOpen] = useState(false);
+
     const [projectsLoaded, setProjectsLoaded] = useState(false);
 
     const [selectedBoard, setSelectedBoard] = useState();
@@ -95,6 +98,7 @@ export default function Dashboard(user) {
         : [];
 
     const sortedChecks = selectedChecks.sort((a, b) => a.cOrder - b.cOrder);
+    const [deleteChecksEnabled, setDeleteChecksEnabled] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [color, setColor] = useState("#F87315");
@@ -111,6 +115,7 @@ export default function Dashboard(user) {
         tCreated: "",
         tPriority: "",
         tCompleted: "",
+        tNotes: "",
     });
 
     const [newCheck, setNewCheck] = useState({
@@ -294,6 +299,11 @@ export default function Dashboard(user) {
         }));
     };
 
+    const toggleNotes = (taskId) => {
+        // Toggle between taskId and an empty string
+        setNotesOpen((prevId) => (prevId === taskId ? "" : taskId));
+    };
+
     const handleEditTask = (task) => {
         setNewTask({
             tName: task.tName,
@@ -301,6 +311,7 @@ export default function Dashboard(user) {
             tDue: task.tDue,
             tPriority: task.tPriority,
             tCompleted: task.tCompleted,
+            tNotes: task.tNotes,
         });
         setSelectedTask(task.id);
         openTaskModal();
@@ -345,6 +356,7 @@ export default function Dashboard(user) {
                     tCreated: new Date().toISOString(),
                     tPriority: newTask.tPriority,
                     tCompleted: true,
+                    tNotes: newTask.tNotes,
                     tOrder: nextTOrder,
                 }
             );
@@ -437,6 +449,11 @@ export default function Dashboard(user) {
                     cOrder: nextCOrder,
                 }
             );
+            setNewCheck({
+                cName: "",
+                cDue: "",
+                cCompleted: false,
+            });
         } catch (e) {
             console.error("Error adding document: ", e);
         }
@@ -762,6 +779,7 @@ export default function Dashboard(user) {
                                     onClick={() => {
                                         setIsEditMode(false);
                                         setSelectedBoard(board.id);
+                                        setSelectedTask();
                                         setModalTitle("Add new task");
                                         openTaskModal();
                                     }}
@@ -879,46 +897,83 @@ export default function Dashboard(user) {
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
-                    <div className="flex ">
+                    <div className="flex gap-x-2 cursor-pointer">
                         <div
-                            className={`flex items-center ${
-                                checks[task.id] && checks[task.id].length === 0
-                                    ? "my-2"
-                                    : ""
-                            } `}
+                            onClick={() => toggleCheckListOpen(task.id)}
+                            className="flex "
                         >
-                            <p className="text-zinc-300 text-sm">Progress</p>
-                        </div>
+                            <div
+                                className={`flex items-center ${
+                                    checks[task.id] &&
+                                    checks[task.id].length === 0
+                                        ? "my-2"
+                                        : ""
+                                } `}
+                            >
+                                <p className="text-zinc-300 text-sm">
+                                    Progress
+                                </p>
+                            </div>
 
-                        {checks[task.id] && checks[task.id].length > 0 ? (
-                            <div>
-                                {checkListOpen[task.id] ? (
-                                    <button
-                                        onClick={() =>
-                                            toggleCheckListOpen(task.id)
-                                        }
-                                        className=" text-zinc-300 mt-2 h-[26px]  rounded-full text-sm font-semibold"
-                                    >
-                                        <ChevronsDownUp
-                                            size={20}
-                                            strokeWidth={2}
-                                        />
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() =>
-                                            toggleCheckListOpen(task.id)
-                                        }
-                                        className=" text-zinc-300  mt-2 h-[26px] rounded-full text-sm font-semibold"
-                                    >
-                                        <ChevronsUpDown
-                                            size={20}
-                                            strokeWidth={2}
-                                        />
-                                    </button>
+                            {checks[task.id] && checks[task.id].length > 0 ? (
+                                <div>
+                                    {checkListOpen[task.id] ? (
+                                        <button className=" text-zinc-300 mt-2 h-[26px]  rounded-full text-sm font-semibold">
+                                            <ChevronsDownUp
+                                                size={20}
+                                                strokeWidth={2}
+                                            />
+                                        </button>
+                                    ) : (
+                                        <button className=" text-zinc-300  mt-2 h-[26px] rounded-full text-sm font-semibold">
+                                            <ChevronsUpDown
+                                                size={20}
+                                                strokeWidth={2}
+                                            />
+                                        </button>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                        {task.tNotes && (
+                            <div
+                                onClick={() => toggleNotes(task.id)}
+                                className="flex cursor-pointer"
+                            >
+                                <div
+                                    className={`flex items-center ${
+                                        checks[task.id] &&
+                                        checks[task.id].length === 0
+                                            ? "my-2"
+                                            : ""
+                                    } `}
+                                >
+                                    <p className="text-zinc-300 text-sm">
+                                        Notes
+                                    </p>
+                                </div>
+
+                                {task.tNotes && (
+                                    <div>
+                                        {notesOpen ? (
+                                            <button className=" text-zinc-300 mt-2 h-[26px]  rounded-full text-sm font-semibold">
+                                                <ChevronsDownUp
+                                                    size={20}
+                                                    strokeWidth={2}
+                                                />
+                                            </button>
+                                        ) : (
+                                            <button className=" text-zinc-300  mt-2 h-[26px] rounded-full text-sm font-semibold">
+                                                <ChevronsUpDown
+                                                    size={20}
+                                                    strokeWidth={2}
+                                                />
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
-                        ) : null}
+                        )}
                     </div>
                     <div className="text-zinc-300  text-md">
                         {checks[task.id]?.filter((check) => check.cCompleted)
@@ -940,8 +995,28 @@ export default function Dashboard(user) {
                         }
                     />
                 </div>
+                {notesOpen === task.id && (
+                    <div
+                        className={`w-full max-h-[50px] mt-3 ${
+                            checkListOpen[task.id] ? "mb-1" : "mb-3"
+                        } `}
+                    >
+                        <div className="flex gap-x-2">
+                            <NotebookPen
+                                size={26}
+                                color="#e4e4e4"
+                                strokeWidth={1.5}
+                            />
+                            <div className="w-full border rounded-md p-0.5 border-zinc-100 px-2">
+                                <p className="text-zinc-900 text-[13px] italic">
+                                    {task.tNotes}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {checkListOpen[task.id] ? (
-                    <div className="mb-2 flex flex-col rounded-md  py-1 ">
+                    <div className=" flex flex-col rounded-md  py-1 ">
                         {checks[task.id]
                             ?.sort((a, b) => a.cOrder - b.cOrder) // Sort checks by cOrder
                             .map((check) => (
@@ -1263,13 +1338,13 @@ export default function Dashboard(user) {
                                                                       newTask.tDue
                                                                   )
                                                                 : null
-                                                        } // Ensure value is a Date object or null
+                                                        }
                                                         onChange={(date) =>
                                                             setNewTask({
                                                                 ...newTask,
                                                                 tDue: date
                                                                     ? date.toISOString()
-                                                                    : "", // Save date as ISO string or clear
+                                                                    : "",
                                                             })
                                                         }
                                                     />
@@ -1316,7 +1391,35 @@ export default function Dashboard(user) {
                                                     />
                                                 </div>
                                             </div>
+                                            <div className="mb-4 flex-grow">
+                                                <label
+                                                    className="block text-gray-700 text-sm font-bold mb-1"
+                                                    htmlFor="newTaskDue"
+                                                >
+                                                    Task Notes
+                                                </label>
+                                                <Textarea
+                                                    value={
+                                                        newTask.tNotes
+                                                            ? newTask.tNotes
+                                                            : ""
+                                                    }
+                                                    onChange={(e) => {
+                                                        setNewTask({
+                                                            ...newTask,
+                                                            tNotes: e.target
+                                                                .value,
+                                                        });
+                                                    }}
+                                                    styles={{
+                                                        input: {
+                                                            height: "94px", // Set the desired fixed height
+                                                        },
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
+
                                         <div className="flex justify-between w-full">
                                             {isEditMode ? (
                                                 <button
@@ -1379,6 +1482,14 @@ export default function Dashboard(user) {
                                     onSubmit={submitNewCheck}
                                     className="relative p-8 w-1/2 bg-zinc-900"
                                 >
+                                    {!isEditMode && (
+                                        <div className="absolute flex justify-center items-center top-0 left-0 w-full h-full bg-zinc-900/85 z-[9999]">
+                                            <p className="text-white text-sm">
+                                                <strong> Note:</strong> Create a
+                                                task first to add checks.
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="mb-4 items">
                                         <div className="flex justify-between">
                                             <label
@@ -1406,12 +1517,13 @@ export default function Dashboard(user) {
                                         </label>
                                         <div className="flex">
                                             <input
-                                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-500 bg-transparent mr-2 placeholder:text-gray-600  text-white leading-tight focus:outline-none focus:shadow-outline"
+                                                className="py-0.5 pl-2 text-sm w-full mb-0.5  appearance-none border-b border-gray-500 bg-transparent mr-2 placeholder:text-gray-400   text-white leading-tight focus:outline-none focus:shadow-outline"
                                                 id="newCheckName"
                                                 name="newCheckName"
                                                 type="text"
                                                 required
                                                 placeholder="e.g. Call the client, Send an email..."
+                                                value={newCheck.cName}
                                                 onChange={(e) =>
                                                     setNewCheck({
                                                         ...newCheck,
@@ -1441,17 +1553,20 @@ export default function Dashboard(user) {
                                             </label>
                                             <DatePickerInput
                                                 placeholder="Select date"
+                                                value={
+                                                    newCheck.cDue
+                                                        ? new Date(
+                                                              newCheck.cDue
+                                                          )
+                                                        : null
+                                                }
                                                 clearable
                                                 valueFormat="DD MMMM YYYY"
                                                 onChange={(date) =>
                                                     setNewCheck({
                                                         ...newCheck,
                                                         cDue: date
-                                                            ? moment(
-                                                                  date
-                                                              ).format(
-                                                                  "DD-MM-YYYY"
-                                                              )
+                                                            ? date.toISOString()
                                                             : "",
                                                     })
                                                 }
@@ -1461,9 +1576,6 @@ export default function Dashboard(user) {
                                                             "#18181B",
                                                         borderColor: "#212c3b",
                                                         color: "#ffffff",
-                                                    },
-                                                    placeholder: {
-                                                        color: "#4a4e66", // Placeholder text color (gray)
                                                     },
                                                 }}
                                             />
@@ -1480,18 +1592,18 @@ export default function Dashboard(user) {
                                                 placeholder="Select Status"
                                                 clearable
                                                 value={
-                                                    newCheck.cCompleted
+                                                    newCheck.cCompleted === true
                                                         ? "true"
                                                         : newCheck.cCompleted ===
                                                           false
                                                         ? "false"
                                                         : ""
-                                                } // Show placeholder or selected value
+                                                }
                                                 onChange={(value) =>
                                                     setNewCheck({
                                                         ...newCheck,
                                                         cCompleted:
-                                                            value === "true", // Convert string to boolean
+                                                            value === "true",
                                                     })
                                                 }
                                                 data={[
@@ -1511,14 +1623,11 @@ export default function Dashboard(user) {
                                                         borderColor: "#212c3b",
                                                         color: "#ffffff",
                                                     },
-                                                    placeholder: {
-                                                        color: "#4a4e66", // Placeholder text color (gray)
-                                                    },
                                                 }}
                                             />
                                         </div>
                                     </div>
-                                    <div className=" px-2 py-2 rounded-md border border-gray-800 overflow-y-auto h-[250px]">
+                                    <div className=" px-2 py-2 rounded-md border border-gray-800 overflow-y-auto h-[250px] scrollbar-custom">
                                         {isEditMode ? (
                                             <>
                                                 <Reorder.Group
@@ -1573,6 +1682,7 @@ export default function Dashboard(user) {
                                                                         check.id ? (
                                                                             <div className="w-full pb-2">
                                                                                 <Textarea
+                                                                                    autosize="true"
                                                                                     value={
                                                                                         updatedCheck
                                                                                     }
@@ -1599,10 +1709,6 @@ export default function Dashboard(user) {
                                                                                             },
                                                                                     }}
                                                                                 />
-                                                                                {console.log(
-                                                                                    "updatedCheck",
-                                                                                    updatedCheck
-                                                                                )}
                                                                             </div>
                                                                         ) : (
                                                                             <div className="">
