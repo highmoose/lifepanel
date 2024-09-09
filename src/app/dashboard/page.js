@@ -14,7 +14,7 @@ export default function DashboardPanel(signOut) {
     const router = useRouter();
 
     const [user, setUser] = useState(null); // User details stored here - Push these to components if needed using props.
-    const [selectedNav, setSelectedNav] = useState("dashboard");
+    const [selectedNav, setSelectedNav] = useState("projects");
     const [quickTicksOpen, setQuickTicksOpen] = useState(false);
 
     useEffect(() => {

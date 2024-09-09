@@ -3,34 +3,54 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+    --foreground-rgb: 0, 0, 0;
+    --background-start-rgb: 214, 219, 220;
+    --background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+    :root {
+        --foreground-rgb: 255, 255, 255;
+        --background-start-rgb: 0, 0, 0;
+        --background-end-rgb: 0, 0, 0;
+    }
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    color: rgb(var(--foreground-rgb));
+    background: linear-gradient(
+            to bottom,
+            transparent,
+            rgb(var(--background-end-rgb))
+        )
+        rgb(var(--background-start-rgb));
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+}
+
+/* Scrollbar track */
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: #18181b; /* Background color of the scrollbar track */
+}
+
+/* Scrollbar thumb */
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background-color: #4a4e66; /* Scrollbar color */
+    border-radius: 4px; /* Roundness of the scrollbar thumb */
+}
+
+/* Scrollbar thumb on hover */
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background-color: #8c8e9a; /* Color when hovering over the scrollbar */
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  .panel {
-    @apply rounded-3xl bg-panel p-6;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
+    .panel {
+        @apply rounded-3xl bg-panel p-6;
+    }
 }
