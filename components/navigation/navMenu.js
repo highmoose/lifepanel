@@ -78,8 +78,8 @@ export default function NavMenu({ userName, setSelectedNav }) {
                 onClick={() => handleSelectedNav(item.id)}
                 className={`relative flex items-center w-full h-10 px-3  ${
                     selected === item.id
-                        ? "text-gray-200 bg-zinc-800"
-                        : "hover:bg-zinc-200 hover:text-zinc-500"
+                        ? "text-gray-200 bg-zinc-800 rounded-sm"
+                        : "hover:bg-zinc-200 rounded-sm hover:text-zinc-500"
                 }`}
                 href="#"
                 aria-label={item.label}
@@ -122,13 +122,13 @@ export default function NavMenu({ userName, setSelectedNav }) {
                     <div className="flex flex-col items-center mt-auto w-full">
                         <button
                             onClick={() => setWidth("wide")}
-                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200"
+                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Expand
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200"
+                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
                         >
                             X
                         </button>
@@ -138,7 +138,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
 
             {/* Wide Nav */}
             {width === "wide" && (
-                <div className="flex flex-col items-center w-48 h-full overflow-hidden text-zinc-200 bg-zinc-900 rounded-r">
+                <div className="flex flex-col items-center w-48 h-full overflow-hidden text-zinc-200 bg-zinc-900 rounded-sm">
                     <a
                         className="flex items-start w-full px-3 mt-3.5 mb-4 pl-5"
                         href="#"
@@ -162,7 +162,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                     </div>
                     <div className="flex flex-col items-center mt-auto w-full p-2">
                         <a
-                            className="flex items-center  w-full h-12 pl-3 bg-zinc-900 hover:bg-zinc-200 hover:text-zinc-900 rounded-md"
+                            className="flex items-center  w-full h-12 pl-3 bg-zinc-900 hover:bg-zinc-200  hover:text-zinc-900 rounded-sm"
                             href="#"
                         >
                             <CircleUser size={20} className="stroke-current" />
@@ -172,13 +172,13 @@ export default function NavMenu({ userName, setSelectedNav }) {
                         </a>
                         <button
                             onClick={() => setWidth("thin")}
-                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200"
+                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Compress Nav
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200"
+                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Sign Out
                         </button>
