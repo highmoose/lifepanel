@@ -166,20 +166,20 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={handleSignIn}
-                                className="flex-grow bg-zinc-900 hover:bg-zinc-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="flex-grow bg-zinc-900 hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 Sign In
                             </button>
                         </div>
                         <a
                             onClick={() => setPanel("signup")}
-                            className="text-sm text-text hover:text-textpink flex justify-center items-center w-full my-1"
+                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full my-1"
                         >
                             Create an Account
                         </a>
                         <a
                             onClick={() => setPanel("forgotpassword")}
-                            className="text-sm text-text hover:text-textpink flex justify-center items-center w-full"
+                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full"
                         >
                             Forgot Password?
                         </a>
@@ -263,7 +263,7 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={handleSignUp}
-                                className="flex-grow bg-textorange hover:bg-zinc-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="flex-grow bg-zinc-900 hover:hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 Create Account
                             </button>
@@ -271,7 +271,7 @@ export default function Home() {
 
                         <a
                             onClick={() => setPanel("login")}
-                            className="text-sm text-text hover:text-textpink flex justify-center items-center w-full"
+                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full"
                         >
                             Go Back
                         </a>
@@ -321,7 +321,7 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={handleForgotPassword}
-                                className="flex-grow bg-zinc-900 hover:bg-textpink text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="flex-grow bg-zinc-900 hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 Forgot Password
                             </button>
@@ -336,7 +336,7 @@ export default function Home() {
                     </form>
                 </div>
             )}
-            <div className="text-sm mt-4">
+            {/* <div className="text-sm mt-4">
                 {user ? (
                     <div className="text-green-500">
                         <p>
@@ -344,11 +344,11 @@ export default function Home() {
                         </p>
                     </div>
                 ) : (
-                    <div className="text-red-500">
+                    <div className="text-textorange">
                         <p>User is not logged in!</p>
                     </div>
                 )}
-            </div>
+            </div> */}
         </div>
     );
 }
