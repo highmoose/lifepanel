@@ -997,18 +997,18 @@ export default function Dashboard(user) {
                 </div>
                 {notesOpen === task.id && (
                     <div
-                        className={`w-full max-h-[50px] mt-3 ${
-                            checkListOpen[task.id] ? "mb-1" : "mb-3"
+                        className={`w-full mt-3 ${
+                            checkListOpen[task.id] ? "mb-1 py-2" : "mb-3"
                         } `}
                     >
-                        <div className="flex gap-x-2">
+                        <div className="flex gap-x-1">
                             <NotebookPen
                                 size={26}
                                 color="#e4e4e4"
                                 strokeWidth={1.5}
                             />
                             <div className="w-full border rounded-md p-0.5 border-zinc-100 px-2">
-                                <p className="text-zinc-900 text-[13px] italic">
+                                <p className="text-zinc-900 text-[13px] italic leading-4">
                                     {task.tNotes}
                                 </p>
                             </div>
@@ -1483,7 +1483,7 @@ export default function Dashboard(user) {
                                     className="relative p-8 w-1/2 bg-zinc-900"
                                 >
                                     {!isEditMode && (
-                                        <div className="absolute flex justify-center items-center top-0 left-0 w-full h-full bg-zinc-900/85 z-[9999]">
+                                        <div className="absolute flex justify-center items-center top-0 left-0 w-full h-full bg-zinc-900/85 z-[9990]">
                                             <p className="text-white text-sm">
                                                 <strong> Note:</strong> Create a
                                                 task first to add checks.
@@ -1499,8 +1499,11 @@ export default function Dashboard(user) {
                                                 Update Check Details
                                             </label>
                                             <div
-                                                onClick={() => closeTaskModal()}
-                                                className="cursor-pointer text-zinc-300 hover:text-white"
+                                                onClick={() => {
+                                                    closeTaskModal();
+                                                    setNewTask({});
+                                                }}
+                                                className="cursor-pointer text-zinc-300 hover:text-white z-[9999]"
                                             >
                                                 <X
                                                     size={18}
