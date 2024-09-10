@@ -89,8 +89,7 @@ export default function DashboardPanel(signOut) {
                     {selectedNav === "messages" && <div>Messages Tab</div>}
                 </div>
             </div>
-            {/* Overlays Here */}
-            <div className="absolute bottom-0 right-0 w-[400px] h-[400px]">
+            <div className="absolute bottom-2 right-2">
                 <QuickTicksOverlay
                     quickTicksOpen={quickTicksOpen}
                     setQuickTicksOpen={setQuickTicksOpen}

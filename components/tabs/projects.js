@@ -22,12 +22,13 @@ import { auth } from "../../src/app/firebase/config";
 import {
     BetweenHorizonalStart,
     Check,
-    ChevronsDownUp,
-    ChevronsUpDown,
     Circle,
     CircleCheck,
+    CircleCheckBig,
     CircleX,
     EllipsisVertical,
+    Eye,
+    EyeOff,
     GalleryHorizontalEnd,
     Grip,
     Lock,
@@ -37,6 +38,7 @@ import {
     Pencil,
     Plus,
     PlusIcon,
+    SquareCheckBig,
     TextCursorInput,
     Trash2,
     X,
@@ -351,12 +353,12 @@ export default function Dashboard(user) {
                 ),
                 {
                     tName: newTask.tName,
-                    tDesc: newTask.tDesc,
+                    tDesc: newTask.tDesc || "",
                     tDue: newTask.tDue,
                     tCreated: new Date().toISOString(),
                     tPriority: newTask.tPriority,
                     tCompleted: true,
-                    tNotes: newTask.tNotes,
+                    tNotes: newTask.tNotes || "",
                     tOrder: nextTOrder,
                 }
             );
@@ -367,6 +369,7 @@ export default function Dashboard(user) {
                 tDue: "",
                 tCreated: "",
                 tPriority: "",
+                tNotes: "",
                 tCompleted: "",
             });
             closeTaskModal();
@@ -677,7 +680,7 @@ export default function Dashboard(user) {
 
     const BoardsComponent = ({ board }) => {
         return (
-            <div>
+            <div className="">
                 <div className="relative w-[310px] shadow-black/5 rounded-xl flex flex-col">
                     <div className=" flex flex-col">
                         <div className="flex flex-col mb-0.5 ">
@@ -883,62 +886,71 @@ export default function Dashboard(user) {
                             {task?.tDesc}
                         </p>
                     </div>
-                    <div
-                        onClick={() => {
-                            setIsEditMode(true);
-                            setSelectedBoard(board.id);
-                            setSelectedTask(task.id);
-                            setModalTitle("Update Task Details");
-                            handleEditTask(task);
-                        }}
-                        className="text-zinc-300 cursor-pointer font-semibold tracking-wider"
-                    >
-                        <EllipsisVertical size={20} strokeWidth={1.5} />
+                    <div className="flex">
+                        <div className="text-zinc-300 text-md">
+                            {checks[task.id]?.filter(
+                                (check) => check.cCompleted
+                            ).length === checks[task.id]?.length &&
+                                checks[task.id]?.length > 0 && (
+                                    <CircleCheckBig
+                                        size={20}
+                                        strokeWidth={1.5}
+                                        color="#0be345"
+                                    />
+                                )}
+                        </div>
+                        <div></div>
+                        <div
+                            onClick={() => {
+                                setIsEditMode(true);
+                                setSelectedBoard(board.id);
+                                setSelectedTask(task.id);
+                                setModalTitle("Update Task Details");
+                                handleEditTask(task);
+                            }}
+                            className="text-zinc-300 cursor-pointer font-semibold tracking-wider -mr-2"
+                        >
+                            <EllipsisVertical size={20} strokeWidth={1.5} />
+                        </div>
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
                     <div className="flex gap-x-2 cursor-pointer">
-                        <div
-                            onClick={() => toggleCheckListOpen(task.id)}
-                            className="flex "
-                        >
+                        {checks[task.id] && checks[task.id].length > 0 ? (
                             <div
-                                className={`flex items-center ${
-                                    checks[task.id] &&
-                                    checks[task.id].length === 0
-                                        ? "my-2"
-                                        : ""
-                                } `}
+                                onClick={() => toggleCheckListOpen(task.id)}
+                                className="flex gap-x-1"
                             >
-                                <p className="text-zinc-300 text-sm">
-                                    Progress
-                                </p>
-                            </div>
+                                <div
+                                    className={`flex items-center ${
+                                        checks[task.id] &&
+                                        checks[task.id].length === 0
+                                            ? "my-2"
+                                            : ""
+                                    } `}
+                                >
+                                    <p className="text-zinc-300 text-sm">
+                                        Checks
+                                    </p>
+                                </div>
 
-                            {checks[task.id] && checks[task.id].length > 0 ? (
                                 <div>
                                     {checkListOpen[task.id] ? (
-                                        <button className=" text-zinc-300 mt-2 h-[26px]  rounded-full text-sm font-semibold">
-                                            <ChevronsDownUp
-                                                size={20}
-                                                strokeWidth={2}
-                                            />
+                                        <button className=" text-zinc-300 mt-1.5 h-[26px]  rounded-full text-sm font-semibold">
+                                            <EyeOff size={16} strokeWidth={2} />
                                         </button>
                                     ) : (
-                                        <button className=" text-zinc-300  mt-2 h-[26px] rounded-full text-sm font-semibold">
-                                            <ChevronsUpDown
-                                                size={20}
-                                                strokeWidth={2}
-                                            />
+                                        <button className=" text-zinc-300  mt-1.5 h-[26px] rounded-full text-sm font-semibold">
+                                            <Eye size={16} strokeWidth={2} />
                                         </button>
                                     )}
                                 </div>
-                            ) : null}
-                        </div>
+                            </div>
+                        ) : null}
                         {task.tNotes && (
                             <div
                                 onClick={() => toggleNotes(task.id)}
-                                className="flex cursor-pointer"
+                                className="flex gap-x-1  cursor-pointer"
                             >
                                 <div
                                     className={`flex items-center ${
@@ -956,16 +968,16 @@ export default function Dashboard(user) {
                                 {task.tNotes && (
                                     <div>
                                         {notesOpen ? (
-                                            <button className=" text-zinc-300 mt-2 h-[26px]  rounded-full text-sm font-semibold">
-                                                <ChevronsDownUp
-                                                    size={20}
+                                            <button className=" text-zinc-300 mt-1.5 h-[26px]  rounded-full text-sm font-semibold">
+                                                <EyeOff
+                                                    size={16}
                                                     strokeWidth={2}
                                                 />
                                             </button>
                                         ) : (
-                                            <button className=" text-zinc-300  mt-2 h-[26px] rounded-full text-sm font-semibold">
-                                                <ChevronsUpDown
-                                                    size={20}
+                                            <button className=" text-zinc-300 mt-1.5  h-[26px] rounded-full text-sm font-semibold">
+                                                <Eye
+                                                    size={16}
                                                     strokeWidth={2}
                                                 />
                                             </button>
@@ -975,7 +987,8 @@ export default function Dashboard(user) {
                             </div>
                         )}
                     </div>
-                    <div className="text-zinc-300  text-md">
+                    <div className="text-zinc-300 text-md flex gap-x-1 items-end">
+                        {/* <p className="text-xs pb-0.5">Progress:</p> */}
                         {checks[task.id]?.filter((check) => check.cCompleted)
                             .length || 0}{" "}
                         / {checks[task.id]?.length || 0}
@@ -983,7 +996,7 @@ export default function Dashboard(user) {
                 </div>
                 <div className={` ${!boardsLocked && "opacity-5"} mb-2`}>
                     <Progress
-                        color="#c4c4c4"
+                        color="#A6A7BA"
                         radius="xl"
                         size="xs"
                         value={
@@ -1020,7 +1033,7 @@ export default function Dashboard(user) {
                         {checks[task.id]
                             ?.sort((a, b) => a.cOrder - b.cOrder) // Sort checks by cOrder
                             .map((check) => (
-                                <div key={check.id} className="py-0.5">
+                                <div key={check.id} className="">
                                     <div className="flex  w-full gap-1  rounded-full justify-between">
                                         <p>
                                             <p
@@ -1193,48 +1206,52 @@ export default function Dashboard(user) {
                             </div>
                             <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
                         </div>
-                        {boardsLocked ? (
-                            <div className="flex gap-4  h-full">
-                                {boards
-                                    .sort((a, b) => a.bOrder - b.bOrder)
-                                    .map((board, index) => (
-                                        <BoardsComponent
-                                            key={board.id}
-                                            board={board}
-                                        />
-                                    ))}
-                            </div>
-                        ) : (
-                            <Reorder.Group
-                                axis="x"
-                                values={boards}
-                                onReorder={(boards) => {
-                                    const updatedBoards = boards.map(
-                                        (board, index) => ({
-                                            ...board,
-                                            bOrder: index + 1,
-                                        })
-                                    );
-                                    setBoards(updatedBoards);
-                                    updateBoardsOrderinDatabase(updatedBoards);
-                                }}
-                            >
-                                <div className="flex gap-4 overflow-x-auto">
+                        <div className="">
+                            {boardsLocked ? (
+                                <div className="flex gap-4">
                                     {boards
                                         .sort((a, b) => a.bOrder - b.bOrder)
                                         .map((board, index) => (
-                                            <Reorder.Item
+                                            <BoardsComponent
                                                 key={board.id}
-                                                value={board}
-                                            >
-                                                <BoardsComponent
-                                                    board={board}
-                                                />
-                                            </Reorder.Item>
+                                                board={board}
+                                            />
                                         ))}
                                 </div>
-                            </Reorder.Group>
-                        )}
+                            ) : (
+                                <Reorder.Group
+                                    axis="x"
+                                    values={boards}
+                                    onReorder={(boards) => {
+                                        const updatedBoards = boards.map(
+                                            (board, index) => ({
+                                                ...board,
+                                                bOrder: index + 1,
+                                            })
+                                        );
+                                        setBoards(updatedBoards);
+                                        updateBoardsOrderinDatabase(
+                                            updatedBoards
+                                        );
+                                    }}
+                                >
+                                    <div className="flex gap-4 overflow-x-auto">
+                                        {boards
+                                            .sort((a, b) => a.bOrder - b.bOrder)
+                                            .map((board, index) => (
+                                                <Reorder.Item
+                                                    key={board.id}
+                                                    value={board}
+                                                >
+                                                    <BoardsComponent
+                                                        board={board}
+                                                    />
+                                                </Reorder.Item>
+                                            ))}
+                                    </div>
+                                </Reorder.Group>
+                            )}
+                        </div>
                         <Modal
                             size={1000}
                             radius={"md"}
@@ -1317,7 +1334,6 @@ export default function Dashboard(user) {
                                                                 .value,
                                                         })
                                                     }
-                                                    required
                                                 />
                                             </div>
                                             <div className="flex gap-6 ">
@@ -1458,6 +1474,7 @@ export default function Dashboard(user) {
                                                 <button
                                                     onClick={() => {
                                                         deleteTask();
+                                                        setNewTask({});
                                                         closeTaskModal();
                                                     }}
                                                     className="flex gap-x-1 text-zinc-900 bg-zinc-900  px-3 py-2 rounded-full items-center text-sm font-semibold tracking-wider"
