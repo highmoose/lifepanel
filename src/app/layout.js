@@ -20,15 +20,7 @@ export default function RootLayout({ children }) {
         <html lang="en">
             <head>{/* Additional <head> elements can be placed here */}</head>
             <body className={roboto.className}>
-                <MantineProvider
-                    theme={
-                        {
-                            /* your theme settings here */
-                        }
-                    }
-                >
-                    {children}
-                </MantineProvider>
+                <MantineProvider theme={{}}>{children}</MantineProvider>
             </body>
         </html>
     );
