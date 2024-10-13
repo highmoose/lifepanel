@@ -1106,10 +1106,10 @@ export default function Dashboard(user) {
     };
 
     return (
-        <>
+        <div>
             {projectsLoaded ? (
                 <>
-                    <div>
+                    <div className="">
                         {/* Boards Nav */}
                         <div className="mb-4">
                             <div className="flex justify-between">
@@ -1206,7 +1206,7 @@ export default function Dashboard(user) {
                             </div>
                             <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
                         </div>
-                        <div className="">
+                        <div>
                             {boardsLocked ? (
                                 <div className="flex gap-4">
                                     {boards
@@ -2011,6 +2011,6 @@ export default function Dashboard(user) {
                     />
                 </div>
             )}
-        </>
+        </div>
     );
 }
