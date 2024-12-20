@@ -14,7 +14,7 @@ export default function DashboardPanel(signOut) {
     const router = useRouter();
 
     const [user, setUser] = useState(null); // User details stored here - Push these to components if needed using props.
-    const [selectedNav, setSelectedNav] = useState("projects");
+    const [selectedNav, setSelectedNav] = useState("taskManager");
     const [quickTicksOpen, setQuickTicksOpen] = useState(false);
 
     useEffect(() => {
@@ -49,7 +49,7 @@ export default function DashboardPanel(signOut) {
                     className="absolute bottom-0 right-0 m-6 rounded-xl"
                 >
                     <div
-                        className={`flex w-12 h-12 ${
+                        className={`flex w-12 h-12 border ${
                             quickTicksOpen
                                 ? "bg-gray-900 shadow-lg shadow-black/5"
                                 : "bg-white"
@@ -75,13 +75,13 @@ export default function DashboardPanel(signOut) {
                 setSelectedNav={handleSelectedNav}
             />
             {/* Tabs */}
-            <div className="h-[100vh] w-[100vw] overflow-y-auto">
-                <div className="w-full h-full overflow-scroll text-white text-sm px-8 pt-6 flex flex-col gap-2">
+            <div className="h-[100vh] w-[100vw] overflow-hidden">
+                <div className="w-full h-full  text-white text-sm pl-8 pt-6 flex flex-col gap-2">
                     <div className="text-lg font-semibold rounded-2xl flex flex-col justify-between text-text">
                         Welcome back, {user?.displayName}!
                     </div>
                     {selectedNav === "dashboard" && <div>Dashboard Tab</div>}
-                    {selectedNav === "projects" && <Projects user={user} />}
+                    {selectedNav === "taskManager" && <Projects user={user} />}
                     {selectedNav === "insights" && <div>Insights Tab</div>}
                     {selectedNav === "docs" && <div>Docs Tab</div>}
                     {selectedNav === "products" && <div>Products Tab</div>}

@@ -24,7 +24,7 @@ export default function Dashboard() {
                         Project Name
                     </p>
                     <div className="flex text-xs gap-x-1 items-center">
-                        <p className="text-textorange">Add Task</p>
+                        <p className="text-primary">Add Task</p>
                         <CirclePlus
                             color="#F87315"
                             size={20}

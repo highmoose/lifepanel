@@ -37,6 +37,8 @@ export default function Home() {
     const [user, setUser] = useState(null);
     const [panel, setPanel] = useState("login");
 
+    const [isloading, setIsloading] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -86,9 +88,10 @@ export default function Home() {
     };
 
     const handleSignIn = async () => {
+        setIsloading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // Signed in successfully
+            setIsloading(false);
         } catch (error) {
             setError(error.message);
         }
@@ -113,9 +116,9 @@ export default function Home() {
                             <Image
                                 src="/images/logo/lp-logo.svg"
                                 alt="Life Panel Logo"
-                                className="h-8"
-                                width={40}
-                                height={40}
+                                className="h-10"
+                                width={60}
+                                height={60}
                             />
                             <p className="text-center text-lg text-text font-semibold">
                                 Life Panel
@@ -163,13 +166,22 @@ export default function Home() {
                             </div>
                         </div>
                         <div className="flex gap-x-2 mb-2">
-                            <button
-                                type="button"
-                                onClick={handleSignIn}
-                                className="flex-grow bg-zinc-900 hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                            >
-                                Sign In
-                            </button>
+                            {isloading ? (
+                                <button
+                                    type="button"
+                                    className="flex-grow bg-zinc-900  text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                >
+                                    Please Wait...
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleSignIn}
+                                    className="flex-grow bg-primary hover:bg-orange-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                >
+                                    Sign In
+                                </button>
+                            )}
                         </div>
                         <a
                             onClick={() => setPanel("signup")}

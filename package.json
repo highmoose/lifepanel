@@ -12,6 +12,8 @@
     "@mantine/core": "^7.9.2",
     "@mantine/dates": "^7.12.2",
     "@mantine/hooks": "^7.9.2",
+    "chatgpt": "^5.2.5",
+    "cloudscraper": "^4.6.0",
     "dayjs": "^1.11.13",
     "firebase": "^10.11.1",
     "framer-motion": "^11.1.9",
@@ -20,9 +22,11 @@
     "next": "14.2.3",
     "puppeteer": "^23.5.3",
     "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^18",
     "react-dom": "^18",
+    "react-rnd": "^10.4.14",
     "react-spinners": "^0.14.1"
   },
   "devDependencies": {
