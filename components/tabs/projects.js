@@ -19,6 +19,8 @@ import { Modal, Progress, Select, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import moment from "moment";
 import { auth } from "../../src/app/firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+
 import {
     BetweenHorizonalStart,
     Check,
@@ -159,18 +161,40 @@ export default function Dashboard(user) {
         getProjectData();
     }, []);
 
+    const waitForAuth = () =>
+        new Promise((resolve) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    unsubscribe(); // Stop listening once we have the user
+                    resolve(user);
+                }
+            });
+        });
+
     const fetchBoards = async () => {
-        const boardsCollection = collection(
-            db,
-            "userData",
-            auth.currentUser.uid,
-            "boards"
-        );
-        const boardsSnapshot = await getDocs(boardsCollection);
-        return boardsSnapshot.docs.map((doc) => ({
-            ...doc.data(),
-            id: doc.id,
-        }));
+        const user = auth.currentUser || (await waitForAuth()); // Wait until auth.currentUser is ready
+
+        if (!user) {
+            console.error("User is not logged in.");
+            return [];
+        }
+
+        try {
+            const boardsCollection = collection(
+                db,
+                "userData",
+                user.uid,
+                "boards"
+            );
+            const boardsSnapshot = await getDocs(boardsCollection);
+            return boardsSnapshot.docs.map((doc) => ({
+                ...doc.data(),
+                id: doc.id,
+            }));
+        } catch (error) {
+            console.error("Error fetching boards:", error);
+            return [];
+        }
     };
 
     const fetchTasks = async (boardId) => {
@@ -695,7 +719,7 @@ export default function Dashboard(user) {
                                         onMouseLeave={() => {
                                             setDragBoard("");
                                         }}
-                                        className="absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 "
+                                        className=" absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 "
                                     >
                                         {dragBoard === board.id ? (
                                             <MoveHorizontal
@@ -722,9 +746,9 @@ export default function Dashboard(user) {
                                     </div>
                                 )}{" "}
                                 <div className="flex justify-between relative">
-                                    <p className="text-zinc-900 text-lg font-semibold  pl-1">
+                                    <div className="text-zinc-900 text-lg font-semibold pl-1 ">
                                         {board.bName}
-                                    </p>
+                                    </div>
                                     <button
                                         onClick={() =>
                                             setActiveBoardId(board.id)
@@ -1106,13 +1130,13 @@ export default function Dashboard(user) {
     };
 
     return (
-        <div>
+        <div className="w-full h-screen ">
             {projectsLoaded ? (
                 <>
-                    <div className="">
+                    <div className="w-full h-full">
                         {/* Boards Nav */}
-                        <div className="mb-4">
-                            <div className="flex justify-between">
+                        <div className="mb-4 mr-8">
+                            <div className="flex justify-between ">
                                 <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
                                     <GalleryHorizontalEnd
                                         color="#101010 "
@@ -1206,9 +1230,9 @@ export default function Dashboard(user) {
                             </div>
                             <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
                         </div>
-                        <div>
+                        <div className="w-full h-[calc(100vh-8.1rem)] overflow-y-scroll">
                             {boardsLocked ? (
-                                <div className="flex gap-4">
+                                <div className="flex gap-4 ">
                                     {boards
                                         .sort((a, b) => a.bOrder - b.bOrder)
                                         .map((board, index) => (

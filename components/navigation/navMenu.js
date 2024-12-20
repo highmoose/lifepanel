@@ -17,7 +17,7 @@ import {
 
 export default function NavMenu({ userName, setSelectedNav }) {
     const [width, setWidth] = useState("wide");
-    const [selected, setSelected] = useState("dashboard");
+    const [selected, setSelected] = useState("taskManager");
 
     const handleSelectedNav = (nav) => {
         setSelected(nav);
@@ -33,42 +33,42 @@ export default function NavMenu({ userName, setSelectedNav }) {
     };
 
     const navItems = [
+        // {
+        //     id: "dashboard",
+        //     label: "Dashboard",
+        //     icon: <Gauge size={18} className="text-gray-400" />,
+        // },
         {
-            id: "dashboard",
-            label: "Dashboard",
-            icon: <Gauge size={18} className="text-gray-400" />,
-        },
-        {
-            id: "projects",
-            label: "Projects",
+            id: "taskManager",
+            label: "Task Manager",
             icon: <ListChecks size={18} className="text-gray-400" />,
         },
-        {
-            id: "insights",
-            label: "Insights",
-            icon: <BarChart4 size={18} className="text-gray-400" />,
-        },
-        {
-            id: "docs",
-            label: "Docs",
-            icon: <Files size={18} className="text-gray-400" />,
-        },
-        {
-            id: "products",
-            label: "Products",
-            icon: <ShoppingCart size={18} className="text-gray-400" />,
-        },
-        {
-            id: "settings",
-            label: "Settings",
-            icon: <SlidersVertical size={18} className="text-gray-400" />,
-        },
-        {
-            id: "messages",
-            label: "Messages",
-            icon: <MessageSquareText size={18} className="text-gray-400" />,
-            hasNotification: true,
-        },
+        // {
+        //     id: "insights",
+        //     label: "Insights",
+        //     icon: <BarChart4 size={18} className="text-gray-400" />,
+        // },
+        // {
+        //     id: "docs",
+        //     label: "Docs",
+        //     icon: <Files size={18} className="text-gray-400" />,
+        // },
+        // {
+        //     id: "products",
+        //     label: "Products",
+        //     icon: <ShoppingCart size={18} className="text-gray-400" />,
+        // },
+        // {
+        //     id: "settings",
+        //     label: "Settings",
+        //     icon: <SlidersVertical size={18} className="text-gray-400" />,
+        // },
+        // {
+        //     id: "messages",
+        //     label: "Messages",
+        //     icon: <MessageSquareText size={18} className="text-gray-400" />,
+        //     hasNotification: true,
+        // },
     ];
 
     const renderNavItems = (isWide) =>
@@ -94,7 +94,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                     <span
                         className={`absolute top-1 ${
                             isWide ? "left-[104px]" : "left-8"
-                        } w-2 h-2 bg-textorange rounded-full`}
+                        } w-2 h-2 bg-primary rounded-full`}
                     ></span>
                 )}
             </a>
@@ -122,13 +122,13 @@ export default function NavMenu({ userName, setSelectedNav }) {
                     <div className="flex flex-col items-center mt-auto w-full">
                         <button
                             onClick={() => setWidth("wide")}
-                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
+                            className="text-sm hover:text-primary w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Expand
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="text-sm hover:text-textorange w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
+                            className="text-sm hover:text-primary w-full h-12 flex justify-center items-center hover:bg-zinc-200 rounded-sm"
                         >
                             X
                         </button>
@@ -172,13 +172,13 @@ export default function NavMenu({ userName, setSelectedNav }) {
                         </a>
                         <button
                             onClick={() => setWidth("thin")}
-                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
+                            className="text-sm hover:text-primary w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Compress Nav
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="text-sm hover:text-textorange w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
+                            className="text-sm hover:text-primary w-full h-12 flex pl-3 items-center hover:bg-zinc-200 rounded-sm"
                         >
                             Sign Out
                         </button>
