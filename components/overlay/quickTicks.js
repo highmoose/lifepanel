@@ -352,7 +352,7 @@ export default function QuickTicks({}) {
                                                                     backgroundColor:
                                                                         "#18181B",
                                                                     borderColor:
-                                                                        "#212c3b",
+                                                                        "#ffffff",
                                                                     color: "#ffffff",
                                                                 },
                                                                 placeholder: {
