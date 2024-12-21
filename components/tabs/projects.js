@@ -38,7 +38,6 @@ import {
     Pencil,
     Plus,
     PlusIcon,
-    SquareCheckBig,
     TextCursorInput,
     Trash2,
     X,
@@ -713,7 +712,15 @@ export default function Dashboard(user) {
             <>
                 <div className="flex justify-between items-start">
                     <div>
-                        <p className="text-zinc-900 text-base font-semibold">
+                        <p
+                            className={`text-zinc-900 text-base font-semibold ${
+                                checks[task.id]?.filter(
+                                    (check) => check.cCompleted
+                                ).length === checks[task.id]?.length &&
+                                checks[task.id]?.length > 0 &&
+                                "line-through"
+                            } `}
+                        >
                             {task?.tName}
                         </p>
                         <p className="text-zinc-600 text-[13px] mb-2 leading-[17px]">
