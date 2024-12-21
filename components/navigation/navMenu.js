@@ -78,7 +78,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                 onClick={() => handleSelectedNav(item.id)}
                 className={`relative flex items-center w-full h-10 px-3  ${
                     selected === item.id
-                        ? "text-gray-200 bg-zinc-800 rounded-sm"
+                        ? "text-gray-200 bg-zinc-800 rounded-sm mr-1"
                         : "hover:bg-zinc-200 rounded-sm hover:text-zinc-500"
                 }`}
                 href="#"
