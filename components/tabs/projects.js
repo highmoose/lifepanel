@@ -2,7 +2,7 @@ import React, { useRef, CSSProperties } from "react";
 import { useState, useEffect } from "react";
 import { Reorder } from "framer-motion";
 import ClipLoader from "react-spinners/MoonLoader";
-
+import { onAuthStateChanged } from "firebase/auth";
 import { db } from "../../src/app/firebase/config";
 import {
     collection,
@@ -19,8 +19,6 @@ import { Modal, Progress, Select, Textarea } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import moment from "moment";
 import { auth } from "../../src/app/firebase/config";
-import { onAuthStateChanged } from "firebase/auth";
-
 import {
     BetweenHorizonalStart,
     Check,
@@ -86,6 +84,10 @@ export default function Dashboard(user) {
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
 
+    console.log("boards", boards);
+    console.log("tasks", tasks);
+    console.log("checks", checks);
+
     const [editCheck, setEditCheck] = useState([]);
     const [updatedCheck, setUpdatedCheck] = useState({});
 
@@ -96,6 +98,10 @@ export default function Dashboard(user) {
     const [selectedBoard, setSelectedBoard] = useState();
     const [selectedTask, setSelectedTask] = useState();
     const [selectedCheck, setSelectedCheck] = useState();
+
+    const [boardTotal, setBoardTotal] = useState(0);
+    const [taskTotal, setTaskTotal] = useState(0);
+    const [checkTotal, setCheckTotal] = useState(0);
 
     const selectedChecks = Array.isArray(checks[selectedTask])
         ? checks[selectedTask]
@@ -702,202 +708,6 @@ export default function Dashboard(user) {
         };
     }, [activeBoardId]);
 
-    const BoardsComponent = ({ board }) => {
-        return (
-            <div className="">
-                <div className="relative w-[310px] shadow-black/5 rounded-xl flex flex-col">
-                    <div className=" flex flex-col">
-                        <div className="flex flex-col mb-0.5 ">
-                            <div>
-                                {boardsLocked ? (
-                                    <></>
-                                ) : (
-                                    <div
-                                        onMouseOver={() => {
-                                            setDragBoard(board.id);
-                                        }}
-                                        onMouseLeave={() => {
-                                            setDragBoard("");
-                                        }}
-                                        className=" absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 "
-                                    >
-                                        {dragBoard === board.id ? (
-                                            <MoveHorizontal
-                                                color="#000000"
-                                                size={28}
-                                                strokeWidth={1.5}
-                                                noMargin
-                                                className="w-full self-center mt-3"
-                                            />
-                                        ) : (
-                                            <Grip
-                                                color="#000000"
-                                                size={28}
-                                                strokeWidth={1.5}
-                                                noMargin
-                                                className="w-full self-center mt-3"
-                                            />
-                                        )}
-                                        {dragBoard === board.id && (
-                                            <p className="text-zinc-900 text-center text-base font-semibold w-full self-center">
-                                                Drag to Reorder
-                                            </p>
-                                        )}
-                                    </div>
-                                )}{" "}
-                                <div className="flex justify-between relative">
-                                    <div className="text-zinc-900 text-lg font-semibold pl-1 ">
-                                        {board.bName}
-                                    </div>
-                                    <button
-                                        onClick={() =>
-                                            setActiveBoardId(board.id)
-                                        }
-                                    >
-                                        <EllipsisVertical
-                                            size={20}
-                                            strokeWidth={1.5}
-                                            color="#000000"
-                                        />
-                                    </button>
-                                    {activeBoardId === board.id && (
-                                        <div
-                                            ref={dropdownRef}
-                                            className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden"
-                                        >
-                                            <div
-                                                onClick={() => {
-                                                    openRenameBoardModal();
-                                                    setBoardName(board.bName);
-                                                    setRenamedBoard(
-                                                        board.bName
-                                                    );
-                                                    setSelectedBoard(board.id);
-                                                }}
-                                                className="flex hover:bg-zinc-700 hover:text-white  items-center justify-between p-2"
-                                            >
-                                                <p>Rename Board</p>
-                                                <TextCursorInput
-                                                    size={16}
-                                                    strokeWidth={2}
-                                                />
-                                            </div>
-                                            <div className="border border-zinc-800" />
-                                            <div
-                                                onClick={() => {
-                                                    openDeleteBoardModal();
-                                                    setBoardName(board.bName);
-                                                    setSelectedBoard(board.id);
-                                                }}
-                                                className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
-                                            >
-                                                <p>Delete Board</p>
-                                                <Trash2
-                                                    size={16}
-                                                    strokeWidth={2}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex gap-x-1">
-                                <button
-                                    onClick={() => {
-                                        setIsEditMode(false);
-                                        setSelectedBoard(board.id);
-                                        setSelectedTask();
-                                        setModalTitle("Add new task");
-                                        openTaskModal();
-                                    }}
-                                    className="flex w-full gap-x-1 text-zinc-900 items-center py-1.5  text-sm font-semibold tracking-wider"
-                                >
-                                    <div className="flex items-center justify-center bg-white hover:bg-zinc-900  hover:text-white p-2 rounded-md w-full">
-                                        <PlusIcon
-                                            size={18}
-                                            strokeWidth={2}
-                                            noMargin
-                                        />
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
-                        {boardsLocked ? (
-                            <Reorder.Group
-                                axis="y"
-                                values={tasks[board.id]}
-                                onReorder={(tasks) => {
-                                    const updatedTasks = tasks.map(
-                                        (task, index) => ({
-                                            ...task,
-                                            tOrder: index + 1,
-                                        })
-                                    );
-
-                                    setTasks((prevTasks) => ({
-                                        ...prevTasks,
-                                        [board.id]: updatedTasks,
-                                    }));
-
-                                    updateTasksOrderInDatabase(
-                                        board.id,
-                                        updatedTasks
-                                    );
-                                }}
-                            >
-                                <div className="flex flex-col gap-2">
-                                    {tasks[board.id]
-                                        ?.sort((a, b) => a.tOrder - b.tOrder)
-                                        .map((task) => (
-                                            <Reorder.Item
-                                                onMouseOver={() => {
-                                                    setSelectedTask(task.id);
-                                                    setSelectedBoard(board.id);
-                                                }}
-                                                key={task.id}
-                                                value={task}
-                                                className={`${getBorderClass(
-                                                    task.tPriority
-                                                )} active:shadow-black/5 bg-white rounded-md p-4 border-l-2 `}
-                                            >
-                                                <TasksComponent
-                                                    task={task}
-                                                    board={board}
-                                                />
-                                            </Reorder.Item>
-                                        ))}
-                                </div>
-                            </Reorder.Group>
-                        ) : (
-                            <div className="flex flex-col gap-4">
-                                {tasks[board.id]
-                                    ?.sort((a, b) => a.tOrder - b.tOrder)
-                                    .map((task) => (
-                                        <div
-                                            onMouseOver={() => {
-                                                setSelectedTask(task.id);
-                                                setSelectedBoard(board.id);
-                                            }}
-                                            key={task.id}
-                                            value={task}
-                                            className={`${getBorderClass(
-                                                task.tPriority
-                                            )} active:shadow-black/5 bg-zinc-50 border-[2px]  rounded-xl p-4 `}
-                                        >
-                                            <TasksComponent
-                                                task={task}
-                                                board={board}
-                                            />
-                                        </div>
-                                    ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     const TasksComponent = ({ task, board }) => {
         return (
             <>
@@ -1130,22 +940,74 @@ export default function Dashboard(user) {
     };
 
     return (
-        <div className="w-full h-screen ">
+        <div className="w-full flex flex-grow">
             {projectsLoaded ? (
                 <>
                     <div className="w-full h-full">
                         {/* Boards Nav */}
-                        <div className="mb-4 mr-8">
+                        <div className="mb-4 mr-8 ">
                             <div className="flex justify-between ">
-                                <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
-                                    <GalleryHorizontalEnd
-                                        color="#101010 "
-                                        size={24}
-                                        strokeWidth={1.5}
-                                    />
-                                    <div className="text-lg text-text font-semibold">
-                                        Boards
+                                <div className="flex">
+                                    <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
+                                        <GalleryHorizontalEnd
+                                            color="#101010 "
+                                            size={24}
+                                            strokeWidth={1.5}
+                                        />
+                                        <div className="text-lg text-text font-semibold">
+                                            Boards
+                                        </div>
                                     </div>
+                                    {/* <div>
+                                        <div className="flex justify-center mt-4">
+                                            <div className="ml-8 grid grid-cols-3 gap-2 bg-primary px-4 rounded">
+                                                <div className="flex text-white items-center gap-2 rounded text-center">
+                                                    <h3 className="text-sm text-white ">
+                                                        Boards
+                                                    </h3>
+                                                    <p className="text-sm font-extrabold ">
+                                                        {boards.length}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 rounded text-center">
+                                                    <h3 className="text-sm text-white ">
+                                                        Tasks
+                                                    </h3>
+                                                    <p className="text-sm font-extrabold text-white">
+                                                        {Object.values(
+                                                            tasks
+                                                        ).reduce(
+                                                            (
+                                                                total,
+                                                                taskArray
+                                                            ) =>
+                                                                total +
+                                                                taskArray.length,
+                                                            0
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 rounded text-center">
+                                                    <h3 className="text-sm text-white">
+                                                        Checks
+                                                    </h3>
+                                                    <p className="text-sm font-extrabold text-white">
+                                                        {Object.values(
+                                                            checks
+                                                        ).reduce(
+                                                            (
+                                                                total,
+                                                                taskArray
+                                                            ) =>
+                                                                total +
+                                                                taskArray.length,
+                                                            0
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> */}
                                 </div>
 
                                 <div className="flex gap-x-2 items-center ">
@@ -1230,51 +1092,303 @@ export default function Dashboard(user) {
                             </div>
                             <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
                         </div>
-                        <div className="w-full h-[calc(100vh-8.1rem)] overflow-y-scroll">
-                            {boardsLocked ? (
-                                <div className="flex gap-4 ">
+                        <div className="w-full h-[calc(100vh-8.1rem)] overflow-scroll">
+                            {/* BOARDS GROUP */}
+                            <Reorder.Group
+                                axis="x"
+                                values={boards}
+                                onReorder={(boards) => {
+                                    const updatedBoards = boards.map(
+                                        (board, index) => ({
+                                            ...board,
+                                            bOrder: index + 1,
+                                        })
+                                    );
+                                    setBoards(updatedBoards);
+                                    updateBoardsOrderinDatabase(updatedBoards);
+                                }}
+                            >
+                                <div className="flex gap-4">
                                     {boards
                                         .sort((a, b) => a.bOrder - b.bOrder)
                                         .map((board, index) => (
-                                            <BoardsComponent
+                                            <Reorder.Item
+                                                drag={!boardsLocked && "x"}
                                                 key={board.id}
-                                                board={board}
-                                            />
+                                                value={board}
+                                            >
+                                                <div className="">
+                                                    <div className="relative w-[310px] shadow-black/5 rounded-xl flex flex-col">
+                                                        <div className=" flex flex-col">
+                                                            <div className="flex flex-col mb-0.5 ">
+                                                                <div>
+                                                                    {boardsLocked ? (
+                                                                        <></>
+                                                                    ) : (
+                                                                        <div
+                                                                            onMouseOver={() => {
+                                                                                setDragBoard(
+                                                                                    board.id
+                                                                                );
+                                                                            }}
+                                                                            onMouseLeave={() => {
+                                                                                setDragBoard(
+                                                                                    ""
+                                                                                );
+                                                                            }}
+                                                                            className=" absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 "
+                                                                        >
+                                                                            {dragBoard ===
+                                                                            board.id ? (
+                                                                                <MoveHorizontal
+                                                                                    color="#000000"
+                                                                                    size={
+                                                                                        28
+                                                                                    }
+                                                                                    strokeWidth={
+                                                                                        1.5
+                                                                                    }
+                                                                                    noMargin
+                                                                                    className="w-full self-center mt-3"
+                                                                                />
+                                                                            ) : (
+                                                                                <Grip
+                                                                                    color="#000000"
+                                                                                    size={
+                                                                                        28
+                                                                                    }
+                                                                                    strokeWidth={
+                                                                                        1.5
+                                                                                    }
+                                                                                    noMargin
+                                                                                    className="w-full self-center mt-3"
+                                                                                />
+                                                                            )}
+                                                                            {dragBoard ===
+                                                                                board.id && (
+                                                                                <p className="text-zinc-900 text-center text-base font-semibold w-full self-center">
+                                                                                    Drag
+                                                                                    to
+                                                                                    Reorder
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    )}{" "}
+                                                                    <div className="flex justify-between relative">
+                                                                        <div className="text-zinc-900 text-lg font-semibold pl-1 ">
+                                                                            {
+                                                                                board.bName
+                                                                            }
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                setActiveBoardId(
+                                                                                    board.id
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <EllipsisVertical
+                                                                                size={
+                                                                                    20
+                                                                                }
+                                                                                strokeWidth={
+                                                                                    1.5
+                                                                                }
+                                                                                color="#000000"
+                                                                            />
+                                                                        </button>
+                                                                        {activeBoardId ===
+                                                                            board.id && (
+                                                                            <div
+                                                                                ref={
+                                                                                    dropdownRef
+                                                                                }
+                                                                                className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden"
+                                                                            >
+                                                                                <div
+                                                                                    onClick={() => {
+                                                                                        openRenameBoardModal();
+                                                                                        setBoardName(
+                                                                                            board.bName
+                                                                                        );
+                                                                                        setRenamedBoard(
+                                                                                            board.bName
+                                                                                        );
+                                                                                        setSelectedBoard(
+                                                                                            board.id
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex hover:bg-zinc-700 hover:text-white  items-center justify-between p-2"
+                                                                                >
+                                                                                    <p>
+                                                                                        Rename
+                                                                                        Board
+                                                                                    </p>
+                                                                                    <TextCursorInput
+                                                                                        size={
+                                                                                            16
+                                                                                        }
+                                                                                        strokeWidth={
+                                                                                            2
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="border border-zinc-800" />
+                                                                                <div
+                                                                                    onClick={() => {
+                                                                                        openDeleteBoardModal();
+                                                                                        setBoardName(
+                                                                                            board.bName
+                                                                                        );
+                                                                                        setSelectedBoard(
+                                                                                            board.id
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                                                                                >
+                                                                                    <p>
+                                                                                        Delete
+                                                                                        Board
+                                                                                    </p>
+                                                                                    <Trash2
+                                                                                        size={
+                                                                                            16
+                                                                                        }
+                                                                                        strokeWidth={
+                                                                                            2
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex gap-x-1">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setIsEditMode(
+                                                                                false
+                                                                            );
+                                                                            setSelectedBoard(
+                                                                                board.id
+                                                                            );
+                                                                            setSelectedTask();
+                                                                            setModalTitle(
+                                                                                "Add new task"
+                                                                            );
+                                                                            openTaskModal();
+                                                                        }}
+                                                                        className="flex w-full gap-x-1 text-zinc-900 items-center py-1.5  text-sm font-semibold tracking-wider"
+                                                                    >
+                                                                        <div className="flex items-center justify-center bg-white hover:bg-zinc-900  hover:text-white p-2 rounded-md w-full">
+                                                                            <PlusIcon
+                                                                                size={
+                                                                                    18
+                                                                                }
+                                                                                strokeWidth={
+                                                                                    2
+                                                                                }
+                                                                                noMargin
+                                                                            />
+                                                                        </div>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            {/* TASKS GROUP */}
+                                                            <Reorder.Group
+                                                                axis="y"
+                                                                values={
+                                                                    tasks[
+                                                                        board.id
+                                                                    ]
+                                                                }
+                                                                onReorder={(
+                                                                    tasks
+                                                                ) => {
+                                                                    const updatedTasks =
+                                                                        tasks.map(
+                                                                            (
+                                                                                task,
+                                                                                index
+                                                                            ) => ({
+                                                                                ...task,
+                                                                                tOrder:
+                                                                                    index +
+                                                                                    1,
+                                                                            })
+                                                                        );
+
+                                                                    setTasks(
+                                                                        (
+                                                                            prevTasks
+                                                                        ) => ({
+                                                                            ...prevTasks,
+                                                                            [board.id]:
+                                                                                updatedTasks,
+                                                                        })
+                                                                    );
+
+                                                                    updateTasksOrderInDatabase(
+                                                                        board.id,
+                                                                        updatedTasks
+                                                                    );
+                                                                }}
+                                                            >
+                                                                <div className="flex flex-col gap-2">
+                                                                    {tasks[
+                                                                        board.id
+                                                                    ]
+                                                                        ?.sort(
+                                                                            (
+                                                                                a,
+                                                                                b
+                                                                            ) =>
+                                                                                a.tOrder -
+                                                                                b.tOrder
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                task
+                                                                            ) => (
+                                                                                <Reorder.Item
+                                                                                    onMouseOver={() => {
+                                                                                        setSelectedTask(
+                                                                                            task.id
+                                                                                        );
+                                                                                        setSelectedBoard(
+                                                                                            board.id
+                                                                                        );
+                                                                                    }}
+                                                                                    key={
+                                                                                        task.id
+                                                                                    }
+                                                                                    value={
+                                                                                        task
+                                                                                    }
+                                                                                    className={`${getBorderClass(
+                                                                                        task.tPriority
+                                                                                    )} active:shadow-black/5 bg-white rounded-md p-4 border-l-2 `}
+                                                                                >
+                                                                                    <TasksComponent
+                                                                                        task={
+                                                                                            task
+                                                                                        }
+                                                                                        board={
+                                                                                            board
+                                                                                        }
+                                                                                    />
+                                                                                </Reorder.Item>
+                                                                            )
+                                                                        )}
+                                                                </div>
+                                                            </Reorder.Group>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Reorder.Item>
                                         ))}
                                 </div>
-                            ) : (
-                                <Reorder.Group
-                                    axis="x"
-                                    values={boards}
-                                    onReorder={(boards) => {
-                                        const updatedBoards = boards.map(
-                                            (board, index) => ({
-                                                ...board,
-                                                bOrder: index + 1,
-                                            })
-                                        );
-                                        setBoards(updatedBoards);
-                                        updateBoardsOrderinDatabase(
-                                            updatedBoards
-                                        );
-                                    }}
-                                >
-                                    <div className="flex gap-4 overflow-x-auto">
-                                        {boards
-                                            .sort((a, b) => a.bOrder - b.bOrder)
-                                            .map((board, index) => (
-                                                <Reorder.Item
-                                                    key={board.id}
-                                                    value={board}
-                                                >
-                                                    <BoardsComponent
-                                                        board={board}
-                                                    />
-                                                </Reorder.Item>
-                                            ))}
-                                    </div>
-                                </Reorder.Group>
-                            )}
+                            </Reorder.Group>
                         </div>
                         <Modal
                             size={1000}
@@ -1768,7 +1882,7 @@ export default function Dashboard(user) {
                                                                                     }
                                                                                 </p>
                                                                                 <div className="text-[12px] text-zinc-500 -mt-1">
-                                                                                    Due:{" "}
+                                                                                    Due:
                                                                                     {moment(
                                                                                         check.cDue
                                                                                     ).format(

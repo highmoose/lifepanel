@@ -9,13 +9,14 @@ import { useRouter } from "next/navigation";
 import Projects from "../../../components/tabs/projects";
 import QuickTicks from "../../../components/overlay/quickTicks";
 import { ClipboardCheck } from "lucide-react";
+import { Drawer } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
 export default function DashboardPanel(signOut) {
     const router = useRouter();
 
     const [user, setUser] = useState(null); // User details stored here - Push these to components if needed using props.
     const [selectedNav, setSelectedNav] = useState("taskManager");
-    const [quickTicksOpen, setQuickTicksOpen] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -34,36 +35,6 @@ export default function DashboardPanel(signOut) {
 
     const handleSelectedNav = (nav) => {
         setSelectedNav(nav);
-    };
-
-    const QuickTicksOverlay = () => {
-        return (
-            <>
-                <div className="absolute bottom-[52px] right-0 m-6 rounded-xl">
-                    {quickTicksOpen && (
-                        <QuickTicks setQuickTicksOpen={setQuickTicksOpen} />
-                    )}
-                </div>
-                <button
-                    onClick={() => setQuickTicksOpen(!quickTicksOpen)}
-                    className="absolute bottom-0 right-0 m-6 rounded-xl"
-                >
-                    <div
-                        className={`flex w-12 h-12 border ${
-                            quickTicksOpen
-                                ? "bg-gray-900 shadow-lg shadow-black/5"
-                                : "bg-white"
-                        } rounded-md items-center justify-center`}
-                    >
-                        <ClipboardCheck
-                            size={26}
-                            color={quickTicksOpen ? "white" : "black"}
-                            noMargin
-                        />
-                    </div>
-                </button>
-            </>
-        );
     };
 
     return (
@@ -89,12 +60,8 @@ export default function DashboardPanel(signOut) {
                     {selectedNav === "messages" && <div>Messages Tab</div>}
                 </div>
             </div>
-            <div className="absolute bottom-2 right-2">
-                <QuickTicksOverlay
-                    quickTicksOpen={quickTicksOpen}
-                    setQuickTicksOpen={setQuickTicksOpen}
-                />
-            </div>
+            {/* Overlays */}
+            <QuickTicks />
         </div>
     );
 }
