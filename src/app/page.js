@@ -106,32 +106,47 @@ export default function Home() {
         }
     };
 
+    const [logoLoaded, setLogoLoaded] = useState(false);
+    const [loginLoaded, setLoginLoaded] = useState(false);
+    useEffect(() => {
+        setLogoLoaded(true);
+        setLoginLoaded(true);
+    }, []);
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-bg">
+        <div className="flex flex-col items-center justify-center min-h-screen py-2 bg-zinc-900">
             {/* Login Panel*/}
             {panel === "login" && (
                 <div>
-                    <form className="w-[300px] bg-panel rounded-2xl shadow-lg p-8 flex flex-col justify-between">
+                    <form className="w-[300px] bg-panel rounded-md shadow-lg p-8 flex flex-col justify-between">
                         <div className="flex items-center gap-x-2 mx-auto mb-4">
                             <Image
                                 src="/images/logo/lp-logo.svg"
                                 alt="Life Panel Logo"
-                                className="h-10"
-                                width={60}
-                                height={60}
+                                className={`h-14 transform transition-transform duration-700 ${
+                                    logoLoaded
+                                        ? "translate-x-0"
+                                        : "translate-y-[105px]"
+                                }`}
+                                width={80}
+                                height={80}
                             />
-                            <p className="text-center text-lg text-text font-semibold">
+                            {/* <p className="text-center text-lg text-text font-semibold">
                                 Life Panel
-                            </p>
+                            </p> */}
                         </div>
-                        <div>
+                        <div
+                            className={`transform transition-opacity duration-700 delay-300 ${
+                                loginLoaded ? "opacity-100" : "opacity-0"
+                            }`}
+                        >
                             <div className="mb-4">
-                                <label
+                                {/* <label
                                     className="block text-gray-700 text-sm font-bold mb-2"
                                     for="email"
                                 >
                                     Email
-                                </label>
+                                </label> */}
                                 <input
                                     id="email"
                                     type="text"
@@ -142,16 +157,16 @@ export default function Home() {
                                 />
                             </div>
                             <div className="mb-4">
-                                <label
+                                {/* <label
                                     className="block text-gray-700 text-sm font-bold mb-2"
                                     for="password"
                                 >
                                     Password
-                                </label>
+                                </label> */}
                                 <input
                                     id="password"
                                     type="password"
-                                    placeholder="******************"
+                                    placeholder="Password"
                                     value={password}
                                     onChange={(e) =>
                                         setPassword(e.target.value)
@@ -164,64 +179,63 @@ export default function Home() {
                                     </p>
                                 )}
                             </div>
+                            <div className="flex gap-x-2 mb-2">
+                                {isloading ? (
+                                    <button
+                                        type="button"
+                                        className="flex-grow bg-zinc-900  text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    >
+                                        Please Wait...
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={handleSignIn}
+                                        className="flex-grow bg-primary hover:bg-orange-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    >
+                                        Sign In
+                                    </button>
+                                )}
+                            </div>
+                            <a
+                                onClick={() => setPanel("signup")}
+                                className="text-sm text-text gap-1 mt-4 hover:text-textorange cursor-pointer flex justify-center items-center w-full"
+                            >
+                                <p> Need an account?</p>
+                                <span className="underline"> Sign up</span>
+                            </a>
                         </div>
-                        <div className="flex gap-x-2 mb-2">
-                            {isloading ? (
-                                <button
-                                    type="button"
-                                    className="flex-grow bg-zinc-900  text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    Please Wait...
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={handleSignIn}
-                                    className="flex-grow bg-primary hover:bg-orange-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                                >
-                                    Sign In
-                                </button>
-                            )}
-                        </div>
-                        <a
-                            onClick={() => setPanel("signup")}
-                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full my-1"
-                        >
-                            Create an Account
-                        </a>
-                        <a
-                            onClick={() => setPanel("forgotpassword")}
-                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full"
-                        >
-                            Forgot Password?
-                        </a>
                     </form>
+                    <a
+                        onClick={() => setPanel("forgotpassword")}
+                        className={`text-sm mt-4 text-white hover:text-textorange cursor-pointer flex justify-center items-center w-full transform transition-opacity duration-700 delay-300 ${
+                            loginLoaded ? "opacity-100" : "opacity-0"
+                        }`}
+                    >
+                        Forgot Password?
+                    </a>
                 </div>
             )}
             {/* Sign Up Panel */}
             {panel === "signup" && (
                 <div>
-                    <form className="w-[300px] bg-panel rounded-2xl shadow-lg p-8 flex flex-col justify-between">
-                        <div className="flex items-center gap-x-2 mx-auto mb-4">
+                    <form className="w-[300px] bg-panel rounded-md shadow-lg p-8 flex flex-col justify-between">
+                        <div className="flex items-center gap-x-2 mx-auto mb-2">
                             <Image
                                 src="/images/logo/lp-logo.svg"
                                 alt="Life Panel Logo"
-                                className="h-8"
-                                width={40}
-                                height={40}
+                                className="h-14"
+                                width={80}
+                                height={80}
                             />
-                            <p className="text-center text-lg text-text font-semibold">
-                                Life Panel
-                            </p>
                         </div>
+                        <p className="text-sm text-center mb-4">
+                            {" "}
+                            Complete the form below{" "}
+                        </p>
+
                         <div>
                             <div className="mb-4">
-                                <label
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                    for="name"
-                                >
-                                    Name
-                                </label>
                                 <input
                                     id="name"
                                     type="text"
@@ -232,12 +246,6 @@ export default function Home() {
                                 />
                             </div>
                             <div className="mb-4">
-                                <label
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                    for="email"
-                                >
-                                    Email
-                                </label>
                                 <input
                                     id="email"
                                     type="text"
@@ -248,16 +256,10 @@ export default function Home() {
                                 />
                             </div>
                             <div className="mb-4">
-                                <label
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                    for="password"
-                                >
-                                    Password
-                                </label>
                                 <input
                                     id="password"
                                     type="password"
-                                    placeholder="******************"
+                                    placeholder="Password"
                                     value={password}
                                     onChange={(e) =>
                                         setPassword(e.target.value)
@@ -275,50 +277,43 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={handleSignUp}
-                                className="flex-grow bg-zinc-900 hover:hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="flex-grow bg-primary hover:bg-orange-400 text-white font-bold font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 Create Account
                             </button>
                         </div>
-
-                        <a
-                            onClick={() => setPanel("login")}
-                            className="text-sm text-text hover:text-textorange cursor-pointer flex justify-center items-center w-full"
-                        >
-                            Go Back
-                        </a>
                     </form>
+                    <a
+                        onClick={() => setPanel("login")}
+                        className="text-sm mt-4 text-white hover:text-textorange cursor-pointer flex justify-center items-center w-full"
+                    >
+                        Go Back
+                    </a>
                 </div>
             )}
             {/* Forgot Password Panel */}
             {panel === "forgotpassword" && (
                 <div>
-                    <form className="w-[300px]  bg-panel rounded-2xl shadow-lg p-8 flex flex-col justify-between">
+                    <form className="w-[300px]  bg-panel rounded-md shadow-lg p-8 flex flex-col justify-between">
                         <div className="flex items-center gap-x-2 mx-auto mb-4">
                             <Image
                                 src="/images/logo/lp-logo.svg"
                                 alt="Life Panel Logo"
-                                className="h-8"
-                                width={40}
-                                height={40}
+                                className="h-14"
+                                width={80}
+                                height={80}
                             />
-                            <p className="text-center text-lg text-text font-semibold">
+                            {/* <p className="text-center text-lg text-text font-semibold">
                                 Life Panel
-                            </p>
+                            </p> */}
                         </div>
-                        <p className="text-text text-center text-xs mb-4">
+                        <p className="text-text text-center text-sm mb-4">
                             Your password recovery email will be sent to this
                             email address
                         </p>
 
                         <div>
                             <div className="mb-4">
-                                <label
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                    for="email"
-                                >
-                                    Email
-                                </label>
                                 <input
                                     id="email"
                                     type="text"
@@ -333,19 +328,18 @@ export default function Home() {
                             <button
                                 type="button"
                                 onClick={handleForgotPassword}
-                                className="flex-grow bg-zinc-900 hover:bg-zinc-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                className="flex-grow bg-primary hover:bg-orange-400 text-white font-bold font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                             >
                                 Forgot Password
                             </button>
                         </div>
-
-                        <a
-                            onClick={() => setPanel("login")}
-                            className="text-sm text-text hover:text-textpink flex justify-center items-center w-full"
-                        >
-                            Go Back
-                        </a>
                     </form>
+                    <a
+                        onClick={() => setPanel("login")}
+                        className="text-sm mt-4 text-white hover:text-textpink flex justify-center items-center w-full"
+                    >
+                        Go Back
+                    </a>
                 </div>
             )}
             {/* <div className="text-sm mt-4">
