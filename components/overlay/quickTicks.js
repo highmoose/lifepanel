@@ -509,9 +509,9 @@ export default function QuickTicks({}) {
                                             type="submit"
                                             className="flex items-center justify-center text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full text-white w-[200px]"
                                         >
-                                            <p>Submit Task</p>
+                                            <p>Submit New Tick</p>
                                         </button>
-                                        <div className="flex items-center gap-2 w-9 h-9 ">
+                                        <div className="flex items-center gap-2  ">
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -530,6 +530,21 @@ export default function QuickTicks({}) {
                                                     strokeWidth={2}
                                                 />
                                             </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setQuickTicksOpen(
+                                                        !quickTicksOpen
+                                                    )
+                                                }
+                                                className={`bg-zinc-800 border-2 ${
+                                                    deleteQuickTicksEnabled
+                                                        ? "border-red-500"
+                                                        : "border-transparent"
+                                                }  p-2 rounded-full text-white hover:bg-zinc-700 hover:text-white`}
+                                            >
+                                                <X size={16} strokeWidth={2} />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -541,20 +556,15 @@ export default function QuickTicks({}) {
 
             <button
                 onClick={() => setQuickTicksOpen(!quickTicksOpen)}
-                className="absolute bottom-0 right-0 m-6 rounded-xl"
+                className="absolute bottom-0 right-0 mr-6 mb-6"
             >
                 <div
-                    className={`flex w-12 h-12 border ${
-                        quickTicksOpen
-                            ? "bg-gray-900 shadow-lg shadow-black/5"
-                            : "bg-white"
-                    } rounded-md items-center justify-center`}
+                    className={`flex h-10 gap-2 px-6 border rounded-full bg-zinc-900 text-white shadow-lg shadow-black/5 ${
+                        quickTicksOpen ? "hidden" : ""
+                    }  items-center justify-center`}
                 >
-                    <ClipboardCheck
-                        size={26}
-                        color={quickTicksOpen ? "white" : "black"}
-                        noMargin
-                    />
+                    <p className="text-sm font-bold">Quick Ticks</p>
+                    <Check size={16} color="#0be345" />
                 </div>
             </button>
         </>
