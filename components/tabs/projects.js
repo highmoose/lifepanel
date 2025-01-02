@@ -822,10 +822,7 @@ export default function Dashboard(user) {
                                     className="flex hover:bg-zinc-700 hover:text-white  items-center justify-between p-2"
                                 >
                                     <p>Edit Task</p>
-                                    <TextCursorInput
-                                        size={16}
-                                        strokeWidth={2}
-                                    />
+                                    <Pencil size={16} strokeWidth={2} />
                                 </div>
                                 <div className="border border-zinc-800" />
                                 <div
@@ -836,7 +833,7 @@ export default function Dashboard(user) {
                                     className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
                                 >
                                     <p>Untick All</p>
-                                    <Trash2 size={16} strokeWidth={2} />
+                                    <Check size={16} strokeWidth={2} />
                                 </div>
                                 <div className="border border-zinc-800" />
                                 <div
