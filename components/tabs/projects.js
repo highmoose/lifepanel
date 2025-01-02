@@ -59,6 +59,11 @@ export default function Dashboard(user) {
     ] = useDisclosure(false);
 
     const [
+        deleteTaskModal,
+        { open: openDeleteTaskModal, close: closeDeleteTaskModal },
+    ] = useDisclosure(false);
+
+    const [
         renameBoardModal,
         { open: openRenameBoardModal, close: closeRenameBoardModal },
     ] = useDisclosure(false);
@@ -69,13 +74,16 @@ export default function Dashboard(user) {
     const [boardsLocked, setBoardsLocked] = useState(true);
     const [dragBoard, setDragBoard] = useState();
     const [activeBoardId, setActiveBoardId] = useState({});
+    const [activeTaskId, setActiveTaskId] = useState({});
     const dropdownRef = useRef(null);
+    const taskDropdownRef = useRef(null);
 
     const [taskDate, setTaskDate] = useState(new Date());
 
     const [checkListOpen, setCheckListOpen] = useState({});
     const [modalTitle, setModalTitle] = useState("Add New Board");
     const [boardName, setBoardName] = useState("");
+    const [taskName, setTaskName] = useState("");
     const [renamedBoard, setRenamedBoard] = useState({});
     const [addBoard, setAddBoard] = useState(false);
 
@@ -83,9 +91,9 @@ export default function Dashboard(user) {
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
 
-    console.log("boards", boards);
-    console.log("tasks", tasks);
-    console.log("checks", checks);
+    // console.log("boards", boards);
+    // console.log("tasks", tasks);
+    // console.log("checks", checks);
 
     const [editCheck, setEditCheck] = useState([]);
     const [updatedCheck, setUpdatedCheck] = useState({});
@@ -248,6 +256,49 @@ export default function Dashboard(user) {
         }));
 
         return checksData;
+    };
+
+    // untick all checks backs on task.id
+    const untickAllChecks = async (boardId, taskId) => {
+        try {
+            const batch = writeBatch(db);
+            const checksCollection = collection(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "boards",
+                boardId,
+                "tasks",
+                taskId,
+                "checks"
+            );
+            const checksSnapshot = await getDocs(checksCollection);
+            const checksData = checksSnapshot.docs.map((doc) => ({
+                ...doc.data(),
+                id: doc.id,
+            }));
+
+            for (const check of checksData) {
+                const checkDocRef = doc(
+                    db,
+                    "userData",
+                    auth.currentUser.uid,
+                    "boards",
+                    boardId,
+                    "tasks",
+                    taskId,
+                    "checks",
+                    check.id
+                );
+                batch.update(checkDocRef, { cCompleted: false });
+            }
+            fetchChecks(boardId, taskId);
+
+            await batch.commit();
+            console.log("Checks unticked successfully.");
+        } catch (error) {
+            console.error("Error unticking checks: ", error);
+        }
     };
 
     const updateTasksOrderInDatabase = async (boardId, updatedTasks) => {
@@ -692,25 +743,32 @@ export default function Dashboard(user) {
             if (
                 dropdownRef.current &&
                 !dropdownRef.current.contains(event.target) &&
-                activeBoardId !== null // Only close if dropdown is open
+                activeBoardId !== null
             ) {
-                setActiveBoardId(null); // Close the dropdown
+                setActiveBoardId(null);
+            } else if (
+                taskDropdownRef.current &&
+                !taskDropdownRef.current.contains(event.target) &&
+                activeTaskId !== null
+            ) {
+                setActiveTaskId(null);
             }
         };
 
-        // Attach event listener for clicks outside
         document.addEventListener("mousedown", handleClickOutside);
 
-        // Clean up the event listener on component unmount
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [activeBoardId]);
+    }, [activeBoardId, activeTaskId]);
+
+    console.log("active task id: ", activeTaskId);
+    console.log("active board id: ", activeBoardId);
 
     const TasksComponent = ({ task, board }) => {
         return (
             <>
-                <div className="flex justify-between items-start">
+                <div className="flex relative justify-between items-start">
                     <div>
                         <p
                             className={`text-zinc-900 text-base font-semibold ${
@@ -741,18 +799,59 @@ export default function Dashboard(user) {
                                 )}
                         </div>
                         <div></div>
-                        <div
-                            onClick={() => {
-                                setIsEditMode(true);
-                                setSelectedBoard(board.id);
-                                setSelectedTask(task.id);
-                                setModalTitle("Update Task Details");
-                                handleEditTask(task);
-                            }}
+
+                        <button
                             className="text-zinc-300 cursor-pointer font-semibold tracking-wider -mr-2"
+                            onClick={() => setActiveTaskId(task.id)}
                         >
                             <EllipsisVertical size={20} strokeWidth={1.5} />
-                        </div>
+                        </button>
+                        {activeTaskId === task.id && (
+                            <div
+                                ref={taskDropdownRef}
+                                className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-7 -right-4 overflow-hidden z-[100]"
+                            >
+                                <div
+                                    onClick={() => {
+                                        setIsEditMode(true);
+                                        // setSelectedBoard(board.id);
+                                        setSelectedTask(task.id);
+                                        setModalTitle("Update Task Details");
+                                        handleEditTask(task);
+                                    }}
+                                    className="flex hover:bg-zinc-700 hover:text-white  items-center justify-between p-2"
+                                >
+                                    <p>Edit Task</p>
+                                    <TextCursorInput
+                                        size={16}
+                                        strokeWidth={2}
+                                    />
+                                </div>
+                                <div className="border border-zinc-800" />
+                                <div
+                                    onClick={() => {
+                                        untickAllChecks(board.id, task.id);
+                                        setActiveTaskId(null);
+                                    }}
+                                    className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                                >
+                                    <p>Untick All</p>
+                                    <Trash2 size={16} strokeWidth={2} />
+                                </div>
+                                <div className="border border-zinc-800" />
+                                <div
+                                    onClick={() => {
+                                        openDeleteTaskModal();
+                                        setTaskName(task.tName);
+                                        setSelectedTask(task.id);
+                                    }}
+                                    className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                                >
+                                    <p>Delete Task</p>
+                                    <Trash2 size={16} strokeWidth={2} />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-between items-center">
@@ -1143,7 +1242,7 @@ export default function Dashboard(user) {
                                                                                     ""
                                                                                 );
                                                                             }}
-                                                                            className=" absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 "
+                                                                            className=" absolute cursor-pointer w-full h-full bg-zinc-100/90 border-zinc-200 border pt-10 z-[100] "
                                                                         >
                                                                             {dragBoard ===
                                                                             board.id ? (
@@ -1210,7 +1309,7 @@ export default function Dashboard(user) {
                                                                                 ref={
                                                                                     dropdownRef
                                                                                 }
-                                                                                className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden"
+                                                                                className="absolute w-1/2 h-fit  bg-zinc-900 shadow-xl shadow-black/20 rounded-md top-8 right-0 overflow-hidden z-[100]"
                                                                             >
                                                                                 <div
                                                                                     onClick={() => {
@@ -2029,6 +2128,7 @@ export default function Dashboard(user) {
                                 </form>
                             </div>
                         </Modal>
+                        {/* Delete Board Modal */}
                         <Modal
                             size={500}
                             radius={"md"}
@@ -2053,7 +2153,7 @@ export default function Dashboard(user) {
                         >
                             <div className="px-4">
                                 <div className="text-[15.5px] mb-4">
-                                    <p className="mb-2">
+                                    <p className="">
                                         You are about to delete the board:
                                     </p>
                                     <p className="mb-2">
@@ -2089,6 +2189,7 @@ export default function Dashboard(user) {
                                 </div>
                             </div>
                         </Modal>
+                        {/* Rename Board Modal */}
                         <Modal
                             size={500}
                             radius={"md"}
@@ -2136,6 +2237,64 @@ export default function Dashboard(user) {
                                             closeRenameBoardModal();
                                         }}
                                         className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                        {/* Delete Task Modal */}
+                        <Modal
+                            size={300}
+                            radius={"md"}
+                            title={
+                                <h1
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Delete Task
+                                </h1>
+                            }
+                            opened={deleteTaskModal}
+                            onClose={() => {
+                                closeDeleteTaskModal();
+                            }}
+                            centered
+                            closeOnClickOutside={true}
+                        >
+                            <div className="px-4">
+                                <div className="text-[15.5px] mb-4">
+                                    <p className="">
+                                        You are about to delete the task:
+                                    </p>
+                                    <p className="mb-2">
+                                        &quot;<strong>{taskName}</strong>
+                                        &quot;
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <button
+                                        onClick={() => {
+                                            {
+                                                closeDeleteTaskModal();
+                                            }
+                                        }}
+                                        className="bg-zinc-900 hover:bg-zinc-800 text-white text-sm rounded-full spx-4 py-2 w-1/2"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            {
+                                                deleteTask();
+                                                closeDeleteTaskModal();
+                                            }
+                                        }}
+                                        className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2 w-1/2"
                                     >
                                         Confirm
                                     </button>

@@ -537,11 +537,8 @@ export default function QuickTicks({}) {
                                                         !quickTicksOpen
                                                     )
                                                 }
-                                                className={`bg-zinc-800 border-2 ${
-                                                    deleteQuickTicksEnabled
-                                                        ? "border-red-500"
-                                                        : "border-transparent"
-                                                }  p-2 rounded-full text-white hover:bg-zinc-700 hover:text-white`}
+                                                className={`bg-zinc-800 border-2 
+                                                      p-2 rounded-full text-white hover:bg-zinc-700 hover:text-white`}
                                             >
                                                 <X size={16} strokeWidth={2} />
                                             </button>
