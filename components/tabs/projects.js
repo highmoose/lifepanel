@@ -762,9 +762,6 @@ export default function Dashboard(user) {
         };
     }, [activeBoardId, activeTaskId]);
 
-    console.log("active task id: ", activeTaskId);
-    console.log("active board id: ", activeBoardId);
-
     const TasksComponent = ({ task, board }) => {
         return (
             <>
