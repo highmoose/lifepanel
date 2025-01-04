@@ -228,6 +228,39 @@ export default function QuickTicks({}) {
         }
     };
 
+    // toggle priority of quick tick, on or off. If no priority, create a field in database in the document called qtPriority
+    const toggleQuickTickPriority = async (id, currentPriority) => {
+        try {
+            const tickDocRef = doc(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "overlay",
+                "quickticks",
+                "quicktickdata",
+                id
+            );
+
+            // Default to `false` if `currentPriority` is `undefined` or `null`
+            const newPriority =
+                currentPriority !== undefined && currentPriority !== null
+                    ? !currentPriority
+                    : true;
+
+            await updateDoc(tickDocRef, {
+                qtPriority: newPriority, // Toggle or set to `true` if not present
+            });
+
+            getQuickTickData();
+        } catch (e) {
+            console.error("Error updating document: ", e);
+        }
+    };
+
+    const handleToggleQuickTicks = (id, currentPriority) => {
+        toggleQuickTickPriority(id, currentPriority);
+    };
+
     useEffect(() => {
         getQuickTickData();
     }, []);
@@ -239,7 +272,6 @@ export default function QuickTicks({}) {
         borderColor: "red",
     };
 
-    console.log("tasksLocked", tasksLocked);
     return (
         <>
             <Drawer
@@ -313,80 +345,150 @@ export default function QuickTicks({}) {
                                     );
                                 }}
                             >
-                                <div className="scrollbar-custom h-[calc(100vh-240px)] flex flex-col gap-3 rounded-lg flex-grow  overflow-y-auto">
+                                <div className="scrollbar-custom h-[calc(100vh-240px)] pt-2 flex flex-col gap-3 rounded-lg flex-grow  overflow-y-auto">
                                     {quickTicks.map((tick) => (
                                         <Reorder.Item
                                             drag={tasksLocked && "y"}
                                             key={tick.id}
                                             value={tick}
                                         >
-                                            <div
-                                                key={tick.id}
-                                                className="w-full flex gap-2 justify-between items-start cursor-ns-resize bg-[#202023] rounded-lg p-4 hover:bg-zinc-800"
-                                            >
-                                                {editQuickTick === tick.id ? (
-                                                    <div className="w-full pb-2 ">
-                                                        <Textarea
-                                                            autosize="true"
-                                                            value={tick.qtData}
-                                                            onChange={(e) => {
-                                                                const updatedTicks =
-                                                                    quickTicks.map(
-                                                                        (t) =>
-                                                                            t.id ===
-                                                                            tick.id
-                                                                                ? {
-                                                                                      ...t,
-                                                                                      qtData: e
-                                                                                          .target
-                                                                                          .value,
-                                                                                  } // Update qtData for the specific tick
-                                                                                : t
+                                            <>
+                                                <div
+                                                    key={tick.id}
+                                                    className="w-full flex gap-2 justify-between items-start cursor-ns-resize bg-[#202023] rounded-lg p-4 hover:bg-zinc-800"
+                                                >
+                                                    {editQuickTick ===
+                                                    tick.id ? (
+                                                        <div className="w-full pb-2 relative ">
+                                                            {tick.qtPriority && (
+                                                                <div className="w-12 h-4  -mt-5 mb-1.5 text-xs flex items-center justify-center bg-red-200 text-red-600 rounded-full ">
+                                                                    Priority
+                                                                </div>
+                                                            )}
+                                                            <Textarea
+                                                                autosize="true"
+                                                                value={
+                                                                    tick.qtData
+                                                                }
+                                                                onChange={(
+                                                                    e
+                                                                ) => {
+                                                                    const updatedTicks =
+                                                                        quickTicks.map(
+                                                                            (
+                                                                                t
+                                                                            ) =>
+                                                                                t.id ===
+                                                                                tick.id
+                                                                                    ? {
+                                                                                          ...t,
+                                                                                          qtData: e
+                                                                                              .target
+                                                                                              .value,
+                                                                                      } // Update qtData for the specific tick
+                                                                                    : t
+                                                                        );
+                                                                    setQuickTicks(
+                                                                        updatedTicks
                                                                     );
-                                                                setQuickTicks(
-                                                                    updatedTicks
-                                                                );
-                                                            }}
-                                                            styles={{
-                                                                input: {
-                                                                    backgroundColor:
-                                                                        "#18181B",
-                                                                    borderColor:
-                                                                        "#ffffff",
-                                                                    color: "#ffffff",
-                                                                },
-                                                                placeholder: {
-                                                                    color: "#4a4e66", // Placeholder text color (gray)
-                                                                },
-                                                            }}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <p
-                                                        className={` text-sm ${
-                                                            tick.qtComplete
-                                                                ? "line-through text-zinc-600"
-                                                                : "text-white"
-                                                        }`}
-                                                    >
-                                                        {tick.qtData}
-                                                    </p>
-                                                )}
+                                                                }}
+                                                                styles={{
+                                                                    input: {
+                                                                        backgroundColor:
+                                                                            "#18181B",
+                                                                        borderColor:
+                                                                            "#ffffff",
+                                                                        color: "#ffffff",
+                                                                        height: "100%", // Makes height full
+                                                                    },
+                                                                    placeholder:
+                                                                        {
+                                                                            color: "#4a4e66", // Placeholder text color (gray)
+                                                                        },
+                                                                }}
+                                                                minRows={3}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <p
+                                                            className={` text-sm ${
+                                                                tick.qtComplete
+                                                                    ? "line-through text-zinc-600"
+                                                                    : "text-white"
+                                                            }`}
+                                                        >
+                                                            {tick.qtPriority && (
+                                                                <div className="w-12 h-4  -mt-5 mb-1.5 text-xs flex items-center justify-center bg-red-200 text-red-600 rounded-full ">
+                                                                    Priority
+                                                                </div>
+                                                            )}
 
-                                                <div className="flex flex-col gap-1 items-end">
-                                                    <div className="flex gap-1 items-center cursor-pointer">
-                                                        <div>
-                                                            {tick.qtComplete ? (
+                                                            {tick.qtData}
+                                                        </p>
+                                                    )}
+
+                                                    <div className="flex flex-col gap-1 items-end">
+                                                        <div className="flex gap-1 items-center cursor-pointer">
+                                                            <div>
+                                                                {tick.qtComplete ? (
+                                                                    <div
+                                                                        onClick={() =>
+                                                                            toggleTickCompletion(
+                                                                                tick.id,
+                                                                                tick.qtComplete
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <CircleCheck
+                                                                            color="#0be345"
+                                                                            size={
+                                                                                20
+                                                                            }
+                                                                            strokeWidth={
+                                                                                1.5
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div
+                                                                        onClick={() =>
+                                                                            toggleTickCompletion(
+                                                                                tick.id,
+                                                                                tick.qtComplete
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Circle
+                                                                            color="#a3a3a3"
+                                                                            size={
+                                                                                20
+                                                                            }
+                                                                            strokeWidth={
+                                                                                1.5
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {!deleteQuickTicksEnabled ? (
                                                                 <div
-                                                                    onClick={() =>
-                                                                        toggleTickCompletion(
-                                                                            tick.id,
-                                                                            tick.qtComplete
-                                                                        )
-                                                                    }
+                                                                    onClick={() => {
+                                                                        setEditQuickTick(
+                                                                            tick.id
+                                                                        );
+                                                                        setTasksLocked(
+                                                                            false
+                                                                        );
+                                                                    }}
+                                                                    className={`${
+                                                                        editQuickTick ===
+                                                                        tick.id
+                                                                            ? "text-white"
+                                                                            : "text-zinc-400"
+                                                                    } hover:text-white -ml-0.5`}
                                                                 >
-                                                                    <CircleCheck
-                                                                        color="#0be345"
+                                                                    <Pencil
                                                                         size={
                                                                             20
                                                                         }
@@ -396,91 +498,77 @@ export default function QuickTicks({}) {
                                                                     />
                                                                 </div>
                                                             ) : (
-                                                                <div
+                                                                <button
                                                                     onClick={() =>
-                                                                        toggleTickCompletion(
-                                                                            tick.id,
-                                                                            tick.qtComplete
+                                                                        deleteQuickTick(
+                                                                            tick.id
                                                                         )
                                                                     }
+                                                                    className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
                                                                 >
-                                                                    <Circle
-                                                                        color="#a3a3a3"
+                                                                    <X
                                                                         size={
-                                                                            20
+                                                                            14
                                                                         }
                                                                         strokeWidth={
-                                                                            1.5
+                                                                            3
                                                                         }
+                                                                        className="cursor-pointer"
                                                                     />
-                                                                </div>
+                                                                </button>
                                                             )}
                                                         </div>
-
-                                                        {!deleteQuickTicksEnabled ? (
-                                                            <div
-                                                                onClick={() => {
-                                                                    setEditQuickTick(
-                                                                        tick.id
-                                                                    );
-                                                                    setTasksLocked(
-                                                                        false
-                                                                    );
-                                                                }}
-                                                                className={`${
-                                                                    editQuickTick ===
-                                                                    tick.id
-                                                                        ? "text-white"
-                                                                        : "text-zinc-400"
-                                                                } hover:text-white -ml-0.5`}
-                                                            >
-                                                                <Pencil
-                                                                    size={20}
-                                                                    strokeWidth={
-                                                                        1.5
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() =>
-                                                                    deleteQuickTick(
-                                                                        tick.id
-                                                                    )
-                                                                }
-                                                                className="text-red-100 text-xs rounded-full p-0.5 bg-red-500"
-                                                            >
-                                                                <X
-                                                                    size={14}
-                                                                    strokeWidth={
-                                                                        3
-                                                                    }
-                                                                    className="cursor-pointer"
-                                                                />
-                                                            </button>
+                                                        {editQuickTick ===
+                                                            tick.id && (
+                                                            <>
+                                                                {tick.qtPriority ? (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            handleToggleQuickTicks(
+                                                                                tick.id,
+                                                                                tick.qtPriority
+                                                                            )
+                                                                        }
+                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border border-white text-white rounded-full cursor-pointer "
+                                                                    >
+                                                                        Priority
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            handleToggleQuickTicks(
+                                                                                tick.id,
+                                                                                tick.qtPriority
+                                                                            )
+                                                                        }
+                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border border-[#a3a3a3] text-[#a3a3a3] cursor-pointer rounded-full "
+                                                                    >
+                                                                        Priority
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        modifyQuickTick(
+                                                                            tick.id
+                                                                        );
+                                                                        setTasksLocked(
+                                                                            true
+                                                                        );
+                                                                    }}
+                                                                    className="flex justify-center w-full text-xs px-2 h-6 gap-x-0.5 items-center bg-white hover:bg-zinc-200 rounded-full text-white "
+                                                                >
+                                                                    <Check
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        color="#0be345"
+                                                                    />
+                                                                </button>
+                                                            </>
                                                         )}
                                                     </div>
-                                                    {editQuickTick ===
-                                                        tick.id && (
-                                                        <button
-                                                            onClick={() => {
-                                                                modifyQuickTick(
-                                                                    tick.id
-                                                                );
-                                                                setTasksLocked(
-                                                                    true
-                                                                );
-                                                            }}
-                                                            className="flex justify-center w-full text-xs px-2 h-6 gap-x-0.5 items-center bg-white hover:bg-zinc-200 rounded-full text-white "
-                                                        >
-                                                            <Check
-                                                                size={16}
-                                                                color="#0be345"
-                                                            />
-                                                        </button>
-                                                    )}
                                                 </div>
-                                            </div>
+                                            </>
                                         </Reorder.Item>
                                     ))}
                                 </div>
