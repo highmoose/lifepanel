@@ -7,6 +7,7 @@ import {
     Pencil,
     Check,
     ClipboardCheck,
+    Flag,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../src/app/firebase/config";
@@ -30,7 +31,10 @@ export default function QuickTicks({}) {
     const [opened, { open, close }] = useDisclosure(false);
 
     const [quickTicks, setQuickTicks] = useState([]);
-    const [newQuickTick, setNewQuickTick] = useState("");
+    const [newQuickTick, setNewQuickTick] = useState({
+        priority: "",
+        data: "",
+    });
     const [deleteQuickTicksEnabled, setDeleteQuickTicksEnabled] =
         useState(false);
 
@@ -189,7 +193,8 @@ export default function QuickTicks({}) {
                     "quicktickdata"
                 ),
                 {
-                    qtData: newQuickTick,
+                    qtData: newQuickTick.data,
+                    qtPriority: newQuickTick.priority,
                     qtComplete: false,
                     qtOrder: newOrder, // Set initial qtOrder
                 }
@@ -198,7 +203,7 @@ export default function QuickTicks({}) {
             console.error("Error adding document: ", e);
         }
         fetchQuickTickData();
-        setNewQuickTick("");
+        setNewQuickTick({ data: "", priority: false });
     };
 
     const updateQuickTicksOrderInDatabase = async (updatedQuickTicks) => {
@@ -361,9 +366,7 @@ export default function QuickTicks({}) {
                                                     tick.id ? (
                                                         <div className="w-full pb-2 relative ">
                                                             {tick.qtPriority && (
-                                                                <div className="w-12 h-4  -mt-5 mb-1.5 text-xs flex items-center justify-center bg-red-200 text-red-600 rounded-full ">
-                                                                    Priority
-                                                                </div>
+                                                                <div className="w-2 h-2  -mt-3 mb-1.5 -ml-3 text-xs flex items-center justify-center bg-red-500 rounded-full"></div>
                                                             )}
                                                             <Textarea
                                                                 autosize="true"
@@ -400,6 +403,7 @@ export default function QuickTicks({}) {
                                                                             "#ffffff",
                                                                         color: "#ffffff",
                                                                         height: "100%", // Makes height full
+                                                                        lineHeight: 1.5,
                                                                     },
                                                                     placeholder:
                                                                         {
@@ -418,9 +422,13 @@ export default function QuickTicks({}) {
                                                             }`}
                                                         >
                                                             {tick.qtPriority && (
-                                                                <div className="w-12 h-4  -mt-5 mb-1.5 text-xs flex items-center justify-center bg-red-200 text-red-600 rounded-full ">
-                                                                    Priority
-                                                                </div>
+                                                                <>
+                                                                    {tick.qtComplete ? (
+                                                                        <div className="w-2 h-2  -mt-3 mb-1.5 -ml-3 text-xs flex items-center justify-center bg-zinc-600 rounded-full"></div>
+                                                                    ) : (
+                                                                        <div className="w-2 h-2  -mt-3 mb-1.5 -ml-3 text-xs flex items-center justify-center bg-red-500 rounded-full"></div>
+                                                                    )}
+                                                                </>
                                                             )}
 
                                                             {tick.qtData}
@@ -529,9 +537,14 @@ export default function QuickTicks({}) {
                                                                                 tick.qtPriority
                                                                             )
                                                                         }
-                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border border-white text-white rounded-full cursor-pointer "
+                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border-transaparent bg-red-500 text-white rounded-full cursor-pointer "
                                                                     >
-                                                                        Priority
+                                                                        <Flag
+                                                                            className=""
+                                                                            size={
+                                                                                12
+                                                                            }
+                                                                        />
                                                                     </button>
                                                                 ) : (
                                                                     <button
@@ -541,9 +554,14 @@ export default function QuickTicks({}) {
                                                                                 tick.qtPriority
                                                                             )
                                                                         }
-                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border border-[#a3a3a3] text-[#a3a3a3] cursor-pointer rounded-full "
+                                                                        className="w-12 h-4 my-1 text-xs flex items-center justify-center border border-zinc-400 text-zinc-400 rounded-full cursor-pointer "
                                                                     >
-                                                                        Priority
+                                                                        <Flag
+                                                                            className=""
+                                                                            size={
+                                                                                12
+                                                                            }
+                                                                        />
                                                                     </button>
                                                                 )}
                                                                 <button
@@ -583,9 +601,12 @@ export default function QuickTicks({}) {
                                         id="newCheckName"
                                         name="newCheckName"
                                         placeholder="e.g. Send an email, Schedule a meeting..."
-                                        value={newQuickTick}
+                                        value={newQuickTick.data}
                                         onChange={(e) =>
-                                            setNewQuickTick(e.target.value)
+                                            setNewQuickTick((prev) => ({
+                                                ...prev, // Preserve other state properties
+                                                data: e.target.value, // Update only the 'data' field
+                                            }))
                                         }
                                         required
                                         style={{ resize: "none" }}
@@ -593,12 +614,35 @@ export default function QuickTicks({}) {
                                     />
 
                                     <div className="flex justify-between w-full h-9">
-                                        <button
-                                            type="submit"
-                                            className="flex items-center justify-center text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full text-white w-[200px]"
-                                        >
-                                            <p>Submit New Tick</p>
-                                        </button>
+                                        <div className="flex items-center gap-2  ">
+                                            <button
+                                                type="submit"
+                                                className="flex items-center justify-center text-sm px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full text-white w-[200px]"
+                                            >
+                                                <p>Submit New Tick</p>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setNewQuickTick((prev) => ({
+                                                        ...prev, // Preserve the rest of the fields
+                                                        priority:
+                                                            !prev.priority, // Toggle priority between true and false
+                                                    }));
+                                                }}
+                                                className={` border-2 ${
+                                                    newQuickTick.priority ===
+                                                    true
+                                                        ? "border-transparent bg-red-600 text-white hover:bg-red-500 "
+                                                        : "border-transparent bg-zinc-800 text-white hover:bg-zinc-700 "
+                                                }  p-2 rounded-full`}
+                                            >
+                                                <Flag
+                                                    size={15}
+                                                    strokeWidth={2}
+                                                />
+                                            </button>
+                                        </div>
                                         <div className="flex items-center gap-2  ">
                                             <button
                                                 type="button"
@@ -625,7 +669,7 @@ export default function QuickTicks({}) {
                                                         !quickTicksOpen
                                                     )
                                                 }
-                                                className={`bg-zinc-800 border-2 
+                                                className={`bg-zinc-800 border-2 border-transparent
                                                       p-2 rounded-full text-white hover:bg-zinc-700 hover:text-white`}
                                             >
                                                 <X size={16} strokeWidth={2} />
