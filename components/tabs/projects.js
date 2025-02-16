@@ -2576,12 +2576,16 @@ export default function Dashboard(user) {
                                     </p>
                                     <input
                                         type="text"
-                                        value={newBoardName}
-                                        onChange={(e) => {
-                                            setNewBoardName(e.target.value);
-                                        }}
+                                        value={newBoard.name}
+                                        onChange={(e) =>
+                                            setNewBoard({
+                                                ...newBoard,
+                                                bName: e.target.value,
+                                            })
+                                        }
                                         className="w-full h-9 border border-zinc-400 rounded-full px-4"
                                     ></input>
+
                                     <p>
                                         Which tab would you like to add it to?
                                     </p>
@@ -2613,6 +2617,7 @@ export default function Dashboard(user) {
                                         <button
                                             onClick={() => {
                                                 submitNewBoard();
+                                                setSelectedMoveTab("");
                                                 closeNewBoardModal();
                                             }}
                                             className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
