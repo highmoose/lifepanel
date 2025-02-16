@@ -56,6 +56,11 @@ export default function Dashboard(user) {
         useDisclosure(false);
 
     const [
+        newBoardModal,
+        { open: openNewBoardModal, close: closeNewBoardModal },
+    ] = useDisclosure(false);
+
+    const [
         deleteBoardModal,
         { open: openDeleteBoardModal, close: closeDeleteBoardModal },
     ] = useDisclosure(false);
@@ -97,6 +102,7 @@ export default function Dashboard(user) {
     const [renamedBoard, setRenamedBoard] = useState({});
     const [addBoard, setAddBoard] = useState(false);
     const [newTabName, setNewTabName] = useState("");
+    const [newBoardName, setNewBoardName] = useState("");
 
     const [tabs, setTabs] = useState([]);
     const [boards, setBoards] = useState([]);
@@ -502,8 +508,7 @@ export default function Dashboard(user) {
         fetchTasks(selectedBoard);
     };
 
-    const submitNewBoard = async (e) => {
-        e.preventDefault();
+    const submitNewBoard = async () => {
         try {
             const boardsQuerySnapshot = await getDocs(
                 collection(db, "userData", auth.currentUser.uid, "boards")
@@ -520,6 +525,7 @@ export default function Dashboard(user) {
                 collection(db, "userData", auth.currentUser.uid, "boards"),
                 {
                     bName: newBoard.bName,
+                    bTab: selectedMoveTab,
                     bCreated: new Date().toISOString(),
                     bOrder: nextBOrder,
                 }
@@ -1231,7 +1237,13 @@ export default function Dashboard(user) {
                                             />
                                         </button>
                                     )}
-                                    {addBoard ? (
+                                    <button
+                                        onClick={() => openNewBoardModal()}
+                                        className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide"
+                                    >
+                                        Add Board
+                                    </button>
+                                    {/* {addBoard ? (
                                         <form
                                             onSubmit={submitNewBoard}
                                             className="flex items-center gap-x-1"
@@ -1271,13 +1283,8 @@ export default function Dashboard(user) {
                                             </button>
                                         </form>
                                     ) : (
-                                        <button
-                                            onClick={() => setAddBoard(true)}
-                                            className="bg-zinc-900 whitespace-nowrap h-[34px] text-white px-4 my-2.5 rounded-full font-semibold tracking-wide"
-                                        >
-                                            New Board
-                                        </button>
-                                    )}
+
+                                    )} */}
                                 </div>
                             </div>
                             <div className="h-[2px] bg-zinc-300 -mt-[2px]"></div>
@@ -2534,6 +2541,85 @@ export default function Dashboard(user) {
                                     >
                                         Confirm
                                     </button>
+                                </div>
+                            </div>
+                        </Modal>
+                        {/* New Board Modal */}
+                        <Modal
+                            size={500}
+                            radius={"md"}
+                            title={
+                                <div
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Add New Board
+                                </div>
+                            }
+                            opened={newBoardModal}
+                            onClose={() => {
+                                closeNewBoardModal();
+                                setNewBoardName("");
+                                setSelectedMoveTab("");
+                            }}
+                            centered
+                            closeOnClickOutside={true}
+                        >
+                            <div className="px-4">
+                                <div className="flex flex-col gap-4 pb-4">
+                                    <p className="">
+                                        Enter the name of the new board:
+                                    </p>
+                                    <input
+                                        type="text"
+                                        value={newBoardName}
+                                        onChange={(e) => {
+                                            setNewBoardName(e.target.value);
+                                        }}
+                                        className="w-full h-9 border border-zinc-400 rounded-full px-4"
+                                    ></input>
+                                    <p>
+                                        Which tab would you like to add it to?
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <form className="w-full mx-auto">
+                                            <select
+                                                id="boards"
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                                onChange={(e) =>
+                                                    setSelectedMoveTab(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                value={selectedMoveTab}
+                                            >
+                                                <option value="" disabled>
+                                                    Choose an option
+                                                </option>
+                                                {tabs.map((tab) => (
+                                                    <option
+                                                        key={tab.id}
+                                                        value={tab.tName}
+                                                    >
+                                                        {tab.tName}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </form>
+                                        <button
+                                            onClick={() => {
+                                                submitNewBoard();
+                                                closeNewBoardModal();
+                                            }}
+                                            className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                                        >
+                                            Confirm
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </Modal>
