@@ -29,6 +29,7 @@ import {
     EllipsisVertical,
     Eye,
     EyeOff,
+    Forward,
     GalleryHorizontalEnd,
     Grip,
     Lock,
@@ -38,6 +39,7 @@ import {
     Pencil,
     Plus,
     PlusIcon,
+    PlusSquare,
     TextCursorInput,
     Trash2,
     X,
@@ -68,6 +70,14 @@ export default function Dashboard(user) {
         { open: openRenameBoardModal, close: closeRenameBoardModal },
     ] = useDisclosure(false);
 
+    const [
+        moveToTabModal,
+        { open: openMoveToTabModal, close: closeMoveToTabModal },
+    ] = useDisclosure(false);
+
+    const [newTabModal, { open: openNewTabModal, close: closeNewTabModal }] =
+        useDisclosure(false);
+
     const [confirmDelete, setConfirmDelete] = useState("");
 
     const [isEditMode, setIsEditMode] = useState(false);
@@ -86,14 +96,12 @@ export default function Dashboard(user) {
     const [taskName, setTaskName] = useState("");
     const [renamedBoard, setRenamedBoard] = useState({});
     const [addBoard, setAddBoard] = useState(false);
+    const [newTabName, setNewTabName] = useState("");
 
+    const [tabs, setTabs] = useState([]);
     const [boards, setBoards] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [checks, setChecks] = useState([]);
-
-    // console.log("boards", boards);
-    // console.log("tasks", tasks);
-    // console.log("checks", checks);
 
     const [editCheck, setEditCheck] = useState([]);
     const [updatedCheck, setUpdatedCheck] = useState({});
@@ -102,9 +110,19 @@ export default function Dashboard(user) {
 
     const [projectsLoaded, setProjectsLoaded] = useState(false);
 
+    const [selectedTab, setSelectedTab] = useState("New Board 3");
+    const [selectedMoveTab, setSelectedMoveTab] = useState("");
     const [selectedBoard, setSelectedBoard] = useState();
     const [selectedTask, setSelectedTask] = useState();
     const [selectedCheck, setSelectedCheck] = useState();
+
+    console.log("selected Tab", selectedTab);
+    console.log("selected Move Tab", selectedMoveTab);
+    console.log("selected Board", selectedBoard);
+    console.log("boards", boards);
+    console.log("Tabs", tabs);
+    // console.log("tasks", tasks);
+    // console.log("checks", checks);
 
     const [boardTotal, setBoardTotal] = useState(0);
     const [taskTotal, setTaskTotal] = useState(0);
@@ -148,8 +166,11 @@ export default function Dashboard(user) {
 
     const fetchBoardsData = async () => {
         const boardsData = await fetchBoards();
+        const tabsData = await fetchTabs();
         const tasksData = {};
         const checksData = {};
+
+        setTabs(tabsData);
 
         for (const board of boardsData) {
             const boardId = board.id;
@@ -184,6 +205,27 @@ export default function Dashboard(user) {
             });
         });
 
+    const fetchTabs = async () => {
+        const user = auth.currentUser || (await waitForAuth()); // Wait until auth.currentUser is ready
+
+        if (!user) {
+            console.error("User is not logged in.");
+            return [];
+        }
+
+        try {
+            const tabsCollection = collection(db, "userData", user.uid, "tabs");
+            const tabsSnapshot = await getDocs(tabsCollection);
+            return tabsSnapshot.docs.map((doc) => ({
+                ...doc.data(),
+                id: doc.id,
+            }));
+        } catch (error) {
+            console.error("Error fetching tabs:", error);
+            return [];
+        }
+    };
+
     const fetchBoards = async () => {
         const user = auth.currentUser || (await waitForAuth()); // Wait until auth.currentUser is ready
 
@@ -204,6 +246,7 @@ export default function Dashboard(user) {
                 ...doc.data(),
                 id: doc.id,
             }));
+            setTabs(boardsSnapshot.docs.map((doc) => doc.id));
         } catch (error) {
             console.error("Error fetching boards:", error);
             return [];
@@ -1039,6 +1082,43 @@ export default function Dashboard(user) {
         );
     };
 
+    const handleMoveToTab = async () => {
+        try {
+            const boardDocRef = doc(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "boards",
+                selectedBoard
+            );
+
+            await updateDoc(boardDocRef, { bTab: selectedMoveTab });
+            console.log("Board moved successfully!");
+        } catch (error) {
+            console.error("Error updating board:", error);
+        }
+        fetchBoardsData();
+    };
+
+    const submitNewTab = async () => {
+        try {
+            const tabsCollectionRef = collection(
+                db,
+                "userData",
+                auth.currentUser.uid,
+                "tabs"
+            );
+
+            await addDoc(tabsCollectionRef, { tName: newTabName });
+
+            console.log("Tab successfully added!");
+        } catch (e) {
+            console.error("Error adding new tab: ", e);
+        }
+
+        fetchBoardsData();
+    };
+
     return (
         <div className="w-full flex flex-grow">
             {projectsLoaded ? (
@@ -1046,17 +1126,30 @@ export default function Dashboard(user) {
                     <div className="w-full h-full">
                         {/* Boards Nav */}
                         <div className="mb-4 mr-8 ">
-                            <div className="flex justify-between ">
-                                <div className="flex">
-                                    <div className="flex w-fit items-center gap-x-2 p-3 border-b-[2px]  border-black">
-                                        <GalleryHorizontalEnd
-                                            color="#101010 "
-                                            size={24}
-                                            strokeWidth={1.5}
-                                        />
-                                        <div className="text-lg text-text font-semibold">
-                                            Boards
-                                        </div>
+                            <div className="flex justify-between items-center">
+                                <div className="flex gap-x-2 items-center">
+                                    <button
+                                        onClick={() => openNewTabModal()}
+                                        className="flex items-center gap-2 bg-zinc-900 font-bold h-[34px] px-4 text-white rounded-full px-2"
+                                    >
+                                        <Plus size={20} /> <p>Add New Tab</p>
+                                    </button>
+                                    <div className="flex gap-x-2 w-fit items-center ">
+                                        {tabs.map((tab) => (
+                                            <div
+                                                key={tab.id}
+                                                onClick={() =>
+                                                    setSelectedTab(tab.tName)
+                                                }
+                                                className={`${
+                                                    selectedTab === tab.tName
+                                                        ? "border-2 border-zinc-900 bg-zinc-50 text-base text-zinc-900 font-bold"
+                                                        : "bg-zinc-50 border-2 border-transparent text-base text-zinc-900 font-bold"
+                                                } flex items-center gap-x-2 px-2 py-1 rounded-md cursor-pointer`}
+                                            >
+                                                <p>{tab.tName}</p>
+                                            </div>
+                                        ))}
                                     </div>
                                     {/* <div>
                                         <div className="flex justify-center mt-4">
@@ -1122,7 +1215,6 @@ export default function Dashboard(user) {
                                                 color="#ffffff"
                                                 size={18}
                                                 strokeWidth={1.5}
-                                                noMargin
                                             />
                                         </button>
                                     ) : (
@@ -1136,7 +1228,6 @@ export default function Dashboard(user) {
                                                 color="#ffffff"
                                                 size={18}
                                                 strokeWidth={1.5}
-                                                noMargin
                                             />
                                         </button>
                                     )}
@@ -1176,7 +1267,6 @@ export default function Dashboard(user) {
                                                     color="#c9c9c9"
                                                     size={20}
                                                     strokeWidth={1.5}
-                                                    noMargin
                                                 />
                                             </button>
                                         </form>
@@ -1210,6 +1300,10 @@ export default function Dashboard(user) {
                             >
                                 <div className="flex gap-4">
                                     {boards
+                                        .filter(
+                                            (board) =>
+                                                board.bTab === selectedTab
+                                        )
                                         .sort((a, b) => a.bOrder - b.bOrder)
                                         .map((board, index) => (
                                             <Reorder.Item
@@ -1248,7 +1342,6 @@ export default function Dashboard(user) {
                                                                                     strokeWidth={
                                                                                         1.5
                                                                                     }
-                                                                                    noMargin
                                                                                     className="w-full self-center mt-3"
                                                                                 />
                                                                             ) : (
@@ -1260,7 +1353,6 @@ export default function Dashboard(user) {
                                                                                     strokeWidth={
                                                                                         1.5
                                                                                     }
-                                                                                    noMargin
                                                                                     className="w-full self-center mt-3"
                                                                                 />
                                                                             )}
@@ -1359,6 +1451,32 @@ export default function Dashboard(user) {
                                                                                         }
                                                                                     />
                                                                                 </div>
+                                                                                <div
+                                                                                    onClick={() => {
+                                                                                        openMoveToTabModal();
+                                                                                        setBoardName(
+                                                                                            board.bName
+                                                                                        );
+                                                                                        setSelectedBoard(
+                                                                                            board.id
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex  hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                                                                                >
+                                                                                    <p>
+                                                                                        Move
+                                                                                        to
+                                                                                        Tab
+                                                                                    </p>
+                                                                                    <Forward
+                                                                                        size={
+                                                                                            16
+                                                                                        }
+                                                                                        strokeWidth={
+                                                                                            2
+                                                                                        }
+                                                                                    />
+                                                                                </div>
                                                                             </div>
                                                                         )}
                                                                     </div>
@@ -1388,7 +1506,6 @@ export default function Dashboard(user) {
                                                                                 strokeWidth={
                                                                                     2
                                                                                 }
-                                                                                noMargin
                                                                             />
                                                                         </div>
                                                                     </button>
@@ -2127,7 +2244,7 @@ export default function Dashboard(user) {
                             size={500}
                             radius={"md"}
                             title={
-                                <h1
+                                <div
                                     style={{
                                         fontSize: "1.2rem",
                                         fontWeight: "bold",
@@ -2136,7 +2253,7 @@ export default function Dashboard(user) {
                                     }}
                                 >
                                     Delete Board
-                                </h1>
+                                </div>
                             }
                             opened={deleteBoardModal}
                             onClose={() => {
@@ -2188,7 +2305,7 @@ export default function Dashboard(user) {
                             size={500}
                             radius={"md"}
                             title={
-                                <h1
+                                <div
                                     style={{
                                         fontSize: "1.2rem",
                                         fontWeight: "bold",
@@ -2197,7 +2314,7 @@ export default function Dashboard(user) {
                                     }}
                                 >
                                     Rename Board
-                                </h1>
+                                </div>
                             }
                             opened={renameBoardModal}
                             onClose={() => {
@@ -2237,12 +2354,63 @@ export default function Dashboard(user) {
                                 </div>
                             </div>
                         </Modal>
+                        {/* New Tab Modal */}
+                        <Modal
+                            size={500}
+                            radius={"md"}
+                            title={
+                                <div
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Add New Tab
+                                </div>
+                            }
+                            opened={newTabModal}
+                            onClose={() => {
+                                closeNewTabModal();
+                                setNewTabName("");
+                            }}
+                            centered
+                            closeOnClickOutside={true}
+                        >
+                            <div className="px-4">
+                                <div className="text-[15.5px] mb-4">
+                                    <p className="mb-2">
+                                        Enter the name of the new tab:
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <input
+                                        type="text"
+                                        value={newTabName}
+                                        onChange={(e) => {
+                                            setNewTabName(e.target.value);
+                                        }}
+                                        className="w-full h-9 border border-zinc-400 rounded-full px-4"
+                                    ></input>
+                                    <button
+                                        onClick={() => {
+                                            submitNewTab();
+                                            closeNewTabModal();
+                                        }}
+                                        className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
                         {/* Delete Task Modal */}
                         <Modal
                             size={300}
                             radius={"md"}
                             title={
-                                <h1
+                                <div
                                     style={{
                                         fontSize: "1.2rem",
                                         fontWeight: "bold",
@@ -2251,7 +2419,7 @@ export default function Dashboard(user) {
                                     }}
                                 >
                                     Delete Task
-                                </h1>
+                                </div>
                             }
                             opened={deleteTaskModal}
                             onClose={() => {
@@ -2289,6 +2457,80 @@ export default function Dashboard(user) {
                                             }
                                         }}
                                         className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2 w-1/2"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </Modal>
+                        {/* Move to Tab Modal */}
+                        <Modal
+                            size={500}
+                            radius={"md"}
+                            title={
+                                <div
+                                    style={{
+                                        fontSize: "1.2rem",
+                                        fontWeight: "bold",
+                                        paddingLeft: "1rem",
+                                        paddingTop: "0.6rem",
+                                    }}
+                                >
+                                    Move Board to Tab
+                                </div>
+                            }
+                            opened={moveToTabModal}
+                            onClose={() => {
+                                closeMoveToTabModal();
+                                setSelectedMoveTab("");
+                            }}
+                            centered
+                            closeOnClickOutside={true}
+                        >
+                            <div className="px-4">
+                                <div className="text-[15.5px] ">
+                                    <p className="mb-2">Move the board:</p>
+                                    <p className="mb-2">
+                                        &quot;
+                                        <strong>{boardName}</strong>&quot;
+                                    </p>
+                                    <p className="mb-2">To the tab:</p>
+                                </div>
+                                <div className="flex items-center gap-2 pb-4">
+                                    <form className="w-full mx-auto">
+                                        <select
+                                            id="boards"
+                                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                            onChange={(e) =>
+                                                setSelectedMoveTab(
+                                                    e.target.value
+                                                )
+                                            }
+                                            value={selectedMoveTab}
+                                        >
+                                            <option value="" disabled>
+                                                Choose an option
+                                            </option>
+                                            {tabs.map((tab) => (
+                                                <option
+                                                    key={tab.id}
+                                                    value={tab.tName}
+                                                >
+                                                    {tab.tName}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </form>
+
+                                    <button
+                                        onClick={() => {
+                                            handleMoveToTab(
+                                                selectedBoard,
+                                                selectedMoveTab
+                                            );
+                                            closeMoveToTabModal();
+                                        }}
+                                        className="bg-zinc-900 hover:bg-red-600 text-white text-sm rounded-full px-4 py-2"
                                     >
                                         Confirm
                                     </button>
