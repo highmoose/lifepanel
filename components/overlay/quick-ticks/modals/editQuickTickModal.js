@@ -36,7 +36,7 @@ const EditQuickTickModal = ({
       <div className="text-center">
         <p className="font-semibold text-lg text-white">Update QuickTick</p>
         <p className="text-sm text-zinc-400">
-          Modify the details of this check and click "Save"
+          Modify the details of this check and click &quot;Save&quot;
         </p>
       </div>
       <textarea

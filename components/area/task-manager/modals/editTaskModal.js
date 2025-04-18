@@ -402,7 +402,7 @@ const EditTaskModal = ({ opened, onClose, task }) => {
               <div className="text-center mb-2">
                 <p className="font-semibold text-lg text-white">Update Check</p>
                 <p className="text-sm text-zinc-400">
-                  Modify the details of this check and click "Update"
+                  Modify the details of this check and click &quot;Update&quot;
                 </p>
               </div>
 
