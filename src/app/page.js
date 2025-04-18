@@ -1,11 +1,11 @@
 "use client";
 
+import { db } from "../../src/app/firebase/config";
+import { doc, setDoc } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { initializeApp } from "firebase/app";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "../../src/app/firebase/config";
 
 import {
     getAuth,
@@ -41,7 +41,9 @@ export default function Home() {
 
     const router = useRouter();
 
-    useEffect(() => {
+
+
+      useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 router.push("/dashboard");
@@ -50,6 +52,9 @@ export default function Home() {
 
         return () => unsubscribe();
     }, []);
+
+
+    
 
     const addUserData = async () => {
         try {

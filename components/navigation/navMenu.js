@@ -114,6 +114,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                             alt="Life Panel Logo"
                             width={24}
                             height={24}
+                            className="w-6 h-6"
                         />
                     </a>
                     <div className="flex flex-col items-center mt-3 ">
@@ -149,6 +150,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                                 alt="Life Panel Logo"
                                 width={24}
                                 height={24}
+                                className="w-6 h-6"
                             />
                             <p className="text-center text-md text-white font-semibold">
                                 Life Panel
@@ -166,7 +168,7 @@ export default function NavMenu({ userName, setSelectedNav }) {
                             href="#"
                         >
                             <CircleUser size={20} className="stroke-current" />
-                            <span className="ml-2 text-sm font-medium">
+                            <span className="ml-2 text-sm font-medium text-white">
                                 {userName}
                             </span>
                         </a>
