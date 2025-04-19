@@ -589,7 +589,10 @@ const QuickTabs = () => {
                             <div className="w-full p-2">
                               <div className="flex flex-wrap">
                                 {tabColours.map((colour, index) => (
-                                  <div className="p-[1.5px] w-1/4 group">
+                                  <div
+                                    key={index}
+                                    className="p-[1.5px] w-1/4 group"
+                                  >
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
