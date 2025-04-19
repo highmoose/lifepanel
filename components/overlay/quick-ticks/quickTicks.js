@@ -574,6 +574,7 @@ const QuickTabs = () => {
                               <p>Untick All</p>
                               <Check size={16} strokeWidth={2} />
                             </button> */}
+                            {/* // I dont think we need this */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
