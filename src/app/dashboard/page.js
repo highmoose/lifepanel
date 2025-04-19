@@ -42,6 +42,8 @@ export default function DashboardPanel(signOut) {
     setSelectedNav(nav);
   };
 
+  console.log("🌐 Connected to API:", process.env.NEXT_PUBLIC_API_URL);
+
   return (
     <div className=" relative w-full h-full flex bg-zinc-100">
       {/* Left Nav Bar */}

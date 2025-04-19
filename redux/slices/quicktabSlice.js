@@ -64,6 +64,32 @@ export const updateQuickTabsOrderAsync = createAsyncThunk(
   }
 );
 
+export const toggleQuickTabOpen = createAsyncThunk(
+  "quickTabs/toggleQuickTabOpen",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.put(`/quicktabs/${id}/toggle`);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const updateQuickTabColour = createAsyncThunk(
+  "quickTabs/updateTabColour",
+  async ({ id, colour }, { rejectWithValue }) => {
+    try {
+      const { data } = await apiClient.put(`/quicktabs/${id}/colour`, {
+        quicktab_colour: colour, // ✅ send correct key to backend
+      });
+      return data; // should contain `id` and `quicktab_colour`
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 const quickTabSlice = createSlice({
   name: "quickTabs",
   initialState: quickTabAdapter.getInitialState(),
@@ -74,6 +100,20 @@ const quickTabSlice = createSlice({
     renameQuickTabOptimistic: quickTabAdapter.updateOne,
     addQuickTabOptimistic: quickTabAdapter.addOne,
     updateQuickTabOrderBatch: quickTabAdapter.updateMany,
+    toggleQuickTabOpenOptimistic: (state, action) => {
+      const id = action.payload;
+      const tab = state.entities[id];
+      if (tab) {
+        tab.quicktab_open = tab.quicktab_open ? 0 : 1;
+      }
+    },
+    updateQuickTabColourOptimistic: (state, action) => {
+      const { id, colour } = action.payload;
+      const tab = state.entities[id];
+      if (tab) {
+        tab.colour = colour;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -102,10 +142,24 @@ const quickTabSlice = createSlice({
       })
       .addCase(deleteQuickTabAsync.fulfilled, (state, action) => {
         quickTabAdapter.removeOne(state, action.payload);
+      })
+      // .addCase(addQuickTabAsync.fulfilled, (state, action) => {
+      //   quickTabAdapter.addOne(state, action.payload);
+      // });
+      .addCase(toggleQuickTabOpen.fulfilled, (state, action) => {
+        const { id, quicktab_open } = action.payload;
+        const existing = state.entities[id];
+        if (existing) {
+          existing.quicktab_open = quicktab_open;
+        }
+      })
+      .addCase(updateQuickTabColour.fulfilled, (state, action) => {
+        const { id, quicktab_colour } = action.payload;
+        const tab = state.entities[id];
+        if (tab) {
+          tab.quicktab_colour = quicktab_colour;
+        }
       });
-    // .addCase(addQuickTabAsync.fulfilled, (state, action) => {
-    //   quickTabAdapter.addOne(state, action.payload);
-    // });
   },
 });
 
@@ -116,6 +170,8 @@ export const {
   renameQuickTabOptimistic,
   addQuickTabOptimistic,
   updateQuickTabOrderBatch,
+  toggleQuickTabOpenOptimistic,
+  updateQuickTabColourOptimistic,
 } = quickTabSlice.actions;
 
 export const {

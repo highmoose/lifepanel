@@ -149,8 +149,6 @@ const EditTaskModal = ({ opened, onClose, task }) => {
       check_order: checks.length,
     };
 
-    console.log("Adding check:", newCheck);
-
     dispatch(createCheck(newCheck)).catch((err) => {
       console.error("Failed to create check:", err);
     });

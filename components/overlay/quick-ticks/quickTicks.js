@@ -11,6 +11,7 @@ import {
   TextCursorInput,
   EyeOff,
   Eye,
+  Ban,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Reorder } from "framer-motion";
@@ -38,6 +39,10 @@ import {
   updateQuickTabOrderBatch,
   updateQuickTabsOrderAsync,
   addQuickTabOptimistic,
+  toggleQuickTabOpen,
+  toggleQuickTabOpenOptimistic,
+  updateQuickTabColourOptimistic,
+  updateQuickTabColour,
 } from "@redux/slices/quicktabSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useCallback } from "react";
@@ -264,6 +269,17 @@ const QuickTabs = () => {
     setActiveModal(null);
   };
 
+  const handleToggleQuickTab = (id) => {
+    dispatch(toggleQuickTabOpenOptimistic(id));
+    dispatch(toggleQuickTabOpen(id));
+  };
+
+  const handleUpdateTabColour = (id, colour) => {
+    console.log("handleUpdateTabColour", id, colour);
+    dispatch(updateQuickTabColourOptimistic({ id, colour }));
+    dispatch(updateQuickTabColour({ id, colour }));
+  };
+
   const handleReorderTabs = (newOrder) => {
     setTabOrder(newOrder);
 
@@ -343,6 +359,40 @@ const QuickTabs = () => {
     return [...quickTabs].sort((a, b) => a.quicktab_order - b.quicktab_order);
   }, [quickTabs]);
 
+  const tabColours = [
+    "grey", // None Gray
+    "lightcoral", // Soft Red
+    "lightsalmon", // Soft Orange
+    "khaki", // Soft Yellow
+    "palegreen", // Soft Green
+    "lightblue", // Soft Blue
+    "plum", // Soft Purple
+    "lightpink", // Soft Pink
+  ];
+
+  const getPastelBgClass = (colour) => {
+    switch (colour) {
+      case "lightcoral":
+        return "bg-red-200";
+      case "lightsalmon":
+        return "bg-orange-200";
+      case "khaki":
+        return "bg-yellow-200";
+      case "palegreen":
+        return "bg-green-200";
+      case "lightblue":
+        return "bg-blue-200";
+      case "plum":
+        return "bg-purple-200";
+      case "lightpink":
+        return "bg-pink-200";
+      case "grey":
+        return "bg-zinc-800";
+      default:
+        return "bg-white";
+    }
+  };
+
   return (
     <>
       <Drawer
@@ -415,28 +465,52 @@ const QuickTabs = () => {
                 value={quickTab.id}
                 className="flex items-center gap-2"
               >
-                <div className="relative flex flex-col w-full bg-zinc-800 shadow-xl rounded px-6 ">
-                  <div className="flex justify-between w-full rounded">
-                    <div className="flex items-center gap-4 ">
+                <div
+                  className={`relative flex flex-col w-full shadow-xl rounded bg-zinc-800 `}
+                >
+                  <div
+                    className={`flex justify-between w-full rounded  px-6 ${
+                      quickTab.quicktab_colour !== null
+                        ? getPastelBgClass(quickTab.quicktab_colour)
+                        : ""
+                    }`}
+                  >
+                    <div className={`flex items-center gap-4  `}>
                       <button
                         className="flex items-center justify-center h-12 rounded group"
-                        onClick={() => toggleQuickTab(quickTab.id)}
+                        onClick={() => {
+                          handleToggleQuickTab(quickTab.id);
+                        }}
                       >
-                        {quickTabsOpen.includes(quickTab.id) ? (
+                        {quickTab.quicktab_open ? (
                           <EyeOff
                             size={22}
                             strokeWidth={1.2}
-                            className="text-zinc-200 group-hover:text-white"
+                            className={`  ${
+                              quickTab.quicktab_colour === "grey"
+                                ? "text-zinc-300 group-hover:text-white"
+                                : "text-zinc-600 group-hover:text-black"
+                            }`}
                           />
                         ) : (
                           <Eye
                             size={22}
                             strokeWidth={1.2}
-                            className="text-zinc-500 group-hover:text-white"
+                            className={`   ${
+                              quickTab.quicktab_colour === "grey"
+                                ? "text-zinc-300 group-hover:text-white"
+                                : "text-zinc-600 group-hover:text-black"
+                            }`}
                           />
                         )}
                       </button>
-                      <div className="flex items-center text-white font-bold  py-3">
+                      <div
+                        className={`flex items-center  font-bold  py-3 ${
+                          quickTab.quicktab_colour === "grey"
+                            ? "text-white"
+                            : "text-black/70"
+                        } `}
+                      >
                         <p>{quickTab.quicktab_name}</p>
                       </div>
                     </div>
@@ -512,27 +586,60 @@ const QuickTabs = () => {
                               <p>Delete Quick Tab</p>
                               <Trash2 size={16} strokeWidth={2} />
                             </button>
+                            <div className="w-full p-2">
+                              <div className="flex flex-wrap">
+                                {tabColours.map((colour, index) => (
+                                  <div className="p-[1.5px] w-1/4 group">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateTabColour(
+                                          quickTab.id,
+                                          colour
+                                        );
+                                      }}
+                                      className={`relative flex w-full h-[24px]  items-center justify-between p-2 rounded shadow-xs border border-transparent group-hover:border-zinc-700 ${getPastelBgClass(
+                                        colour
+                                      )}`}
+                                    >
+                                      {" "}
+                                      {colour === "grey" && (
+                                        <div className="absolute inset-0 flex justify-center items-center z-10">
+                                          <Ban
+                                            size={16}
+                                            strokeWidth={2}
+                                            className="text-white/50"
+                                          />
+                                        </div>
+                                      )}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {quickTabsOpen.includes(quickTab.id) && (
-                    <QuickTicks
-                      quickTab={quickTab}
-                      setSelectedQuickTick={setSelectedQuickTick}
-                      setAddQuickTickModalOpen={setAddQuickTickModalOpen}
-                      setEditQuickTickModalOpen={setEditQuickTickModalOpen}
-                      selectedQuickTick={selectedQuickTick}
-                      setEditQuickTickId={setEditQuickTickId}
-                      setEditQuickTickName={setEditQuickTickName}
-                      setEditQuickTickPriority={setEditQuickTickPriority}
-                      setEditQuickTabId={setEditQuickTabId}
-                      setAddQuickTabId={setAddQuickTabId}
-                      setActiveModal={setActiveModal}
-                    />
-                  )}
+                  <div className={` ${quickTab.quicktab_open ? "p-4" : ""}`}>
+                    {quickTab.quicktab_open === 1 && (
+                      <QuickTicks
+                        quickTab={quickTab}
+                        setSelectedQuickTick={setSelectedQuickTick}
+                        setAddQuickTickModalOpen={setAddQuickTickModalOpen}
+                        setEditQuickTickModalOpen={setEditQuickTickModalOpen}
+                        selectedQuickTick={selectedQuickTick}
+                        setEditQuickTickId={setEditQuickTickId}
+                        setEditQuickTickName={setEditQuickTickName}
+                        setEditQuickTickPriority={setEditQuickTickPriority}
+                        setEditQuickTabId={setEditQuickTabId}
+                        setAddQuickTabId={setAddQuickTabId}
+                        setActiveModal={setActiveModal}
+                      />
+                    )}
+                  </div>
                 </div>
               </Reorder.Item>
             ))}
@@ -700,7 +807,7 @@ const QuickTicks = ({
 
   return (
     <div>
-      <div className="overflow-hidden ">
+      <div className="overflow-hidden [] ">
         {localOrder.length > 0 ? (
           <Reorder.Group axis="y" values={localOrder} onReorder={handleReorder}>
             {localOrder.map((tickId) => {
@@ -811,7 +918,7 @@ const QuickTicks = ({
           </p>
         )}
       </div>
-      <div className="flex justify-between gap-1 w-full my-4 px-1  mt-4 ">
+      <div className="flex justify-between gap-1 w-full  px-1  mt-4 ">
         <button
           onClick={(e) => {
             e.stopPropagation();
