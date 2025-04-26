@@ -40,6 +40,8 @@ import {
   updateCheckOptimistically,
   saveReorderedChecks,
   selectChecksGroupedByTask,
+  resetChecksOptimistically,
+  resetChecks,
 } from "@redux/slices/checkSlice";
 import {
   saveReorderedBoards,
@@ -285,17 +287,7 @@ export default function TaskManager({ data }) {
                               <p>Rename Board</p>
                               <TextCursorInput size={16} strokeWidth={2} />
                             </button>
-                            <button
-                              onClick={() => {
-                                setSelectedBoardId(board.id);
-                                setDeleteBoardModalOpen(true);
-                                setVisibleBoardMenu({});
-                              }}
-                              className="flex w-full hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
-                            >
-                              <p>Delete Board</p>
-                              <Trash2 size={16} strokeWidth={2} />
-                            </button>
+
                             <button
                               onClick={() => {
                                 setSelectedBoard(board);
@@ -306,6 +298,21 @@ export default function TaskManager({ data }) {
                             >
                               <p>Move to Tab</p>
                               <Forward size={16} strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedBoardId(board.id);
+                                setDeleteBoardModalOpen(true);
+                                setVisibleBoardMenu({});
+                              }}
+                              className="flex w-full hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                            >
+                              <p>Delete Board</p>
+                              <X
+                                size={20}
+                                strokeWidth={2}
+                                className="text-red-500"
+                              />
                             </button>
                           </div>
                         </div>
@@ -438,6 +445,17 @@ export default function TaskManager({ data }) {
       debouncedSave(reorderedWithOrder);
     };
 
+    const handleResetChecks = (taskId) => {
+      const checksToReset = checksByTask[taskId] || [];
+      const updatedChecks = checksToReset.map((check) => ({
+        ...check,
+        check_complete: 0,
+      }));
+
+      dispatch(resetChecksOptimistically(updatedChecks));
+      dispatch(resetChecks({ taskId }));
+    };
+
     return (
       <Reorder.Group
         axis="y"
@@ -505,7 +523,13 @@ export default function TaskManager({ data }) {
                           <p>Edit Task</p>
                           <Pencil size={16} strokeWidth={2} />
                         </button>
-                        <button className="flex w-full hover:bg-zinc-700 hover:text-white items-center justify-between p-2">
+                        <button
+                          onClick={() => {
+                            handleResetChecks(task.id);
+                            setVisibleTaskMenu(false);
+                          }}
+                          className="flex w-full hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
+                        >
                           <p>Untick All</p>
                           <Check size={16} strokeWidth={2} />
                         </button>
@@ -514,7 +538,11 @@ export default function TaskManager({ data }) {
                           className="flex w-full hover:bg-zinc-700 hover:text-white items-center justify-between p-2"
                         >
                           <p>Delete Task</p>
-                          <Trash2 size={16} strokeWidth={2} />
+                          <X
+                            size={20}
+                            strokeWidth={2}
+                            className="text-red-500"
+                          />
                         </button>
                       </div>
                     </div>

@@ -73,6 +73,18 @@ export const saveReorderedChecks = createAsyncThunk(
   }
 );
 
+export const resetChecks = createAsyncThunk(
+  "checks/resetChecks",
+  async ({ taskId }, { rejectWithValue }) => {
+    try {
+      await apiClient.put("/checks/reset", { task_id: taskId });
+      return taskId;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 // Slice
 const checkSlice = createSlice({
   name: "checks",
@@ -99,6 +111,13 @@ const checkSlice = createSlice({
     deleteCheckOptimistically: (state, action) => {
       checksAdapter.removeOne(state, action.payload);
     },
+    resetChecksOptimistically: (state, action) => {
+      action.payload.forEach((check) => {
+        if (state.entities[check.id]) {
+          state.entities[check.id].check_complete = check.check_complete;
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -113,10 +132,24 @@ const checkSlice = createSlice({
       // })
       .addCase(deleteCheck.fulfilled, (state, action) => {
         checksAdapter.removeOne(state, action.payload);
+      })
+      // .addCase(saveReorderedChecks.fulfilled, (state, action) => {
+      //   checksAdapter.upsertMany(state, action.payload);
+      // });
+      .addCase(resetChecks.fulfilled, (state, action) => {
+        const taskId = action.payload;
+
+        // Optimistically reset all checks for the task
+        const checksForTask = state.entities.filter(
+          (check) => check.task_id === taskId
+        );
+        checksForTask.forEach((check) => {
+          check.check_complete = 0;
+        });
+      })
+      .addCase(resetChecks.rejected, (state, action) => {
+        state.error = action.payload || "Failed to reset checks";
       });
-    // .addCase(saveReorderedChecks.fulfilled, (state, action) => {
-    //   checksAdapter.upsertMany(state, action.payload);
-    // });
   },
 });
 
@@ -153,6 +186,7 @@ export const {
   updateCheckOptimistically,
   reorderChecks,
   deleteCheckOptimistically,
+  resetChecksOptimistically,
 } = checkSlice.actions;
 
 // Reducer

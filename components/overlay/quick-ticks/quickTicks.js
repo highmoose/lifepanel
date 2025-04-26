@@ -575,18 +575,6 @@ const QuickTabs = () => {
                               <Check size={16} strokeWidth={2} />
                             </button> */}
                             {/* // I dont think we need this */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedQuickTab(quickTab.id);
-                                setActiveModal("delete");
-                                setVisibleQuickTabMenu(false);
-                              }}
-                              className="flex w-full hover:bg-white  items-center justify-between p-2"
-                            >
-                              <p>Delete Quick Tab</p>
-                              <Trash2 size={16} strokeWidth={2} />
-                            </button>
                             <div className="w-full p-2">
                               <div className="flex flex-wrap">
                                 {tabColours.map((colour, index) => (
@@ -621,6 +609,22 @@ const QuickTabs = () => {
                                 ))}
                               </div>
                             </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedQuickTab(quickTab.id);
+                                setActiveModal("delete");
+                                setVisibleQuickTabMenu(false);
+                              }}
+                              className="flex w-full hover:bg-white  items-center justify-between p-2"
+                            >
+                              <p>Delete Quick Tab</p>
+                              <X
+                                size={20}
+                                strokeWidth={2}
+                                className="text-red-500"
+                              />
+                            </button>
                           </div>
                         </div>
                       )}
