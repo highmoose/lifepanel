@@ -703,7 +703,7 @@ export default function TaskManager({ data }) {
           {checks.map((check) => (
             <Reorder.Item key={check.id} value={check.id}>
               <div
-                className={`rounded transition-opacity duration-1000 ${
+                className={`rounded transition-opacity duration-1000  h-8 flex flex-col justify-center ${
                   visibleChecks ? "opacity-100" : "opacity-0"
                 } `}
               >
@@ -730,12 +730,12 @@ export default function TaskManager({ data }) {
                   <button onClick={() => handleToggleCheck(check)}>
                     {check.check_complete === 1 ? (
                       <CircleCheck
-                        size={20}
+                        size={22}
                         strokeWidth={1.5}
                         color="#0be345"
                       />
                     ) : (
-                      <Circle size={20} strokeWidth={1.5} color="lightgray" />
+                      <Circle size={22} strokeWidth={1.5} color="lightgray" />
                     )}
                   </button>
                 </div>
