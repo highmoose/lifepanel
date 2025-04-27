@@ -446,6 +446,7 @@ export default function TaskManager({ data }) {
     };
 
     const handleResetChecks = (taskId) => {
+      console.log("handleResetChecks function", taskId);
       const checksToReset = checksByTask[taskId] || [];
       const updatedChecks = checksToReset.map((check) => ({
         ...check,

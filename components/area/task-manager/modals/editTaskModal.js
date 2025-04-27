@@ -447,7 +447,7 @@ const EditTaskModal = ({ opened, onClose, task }) => {
             </div>
 
             <div className="relative flex flex-col w-full h-full border border-zinc-600 rounded p-3 overflow-hidden">
-              <div className="max-h-[284px] overflow-y-auto scrollbar-dark">
+              <div className="flex-1 max-h-[284px] overflow-y-auto scrollbar-dark">
                 <Reorder.Group
                   axis="y"
                   values={checks.map((c) => c.id)}

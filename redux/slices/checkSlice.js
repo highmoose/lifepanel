@@ -76,9 +76,13 @@ export const saveReorderedChecks = createAsyncThunk(
 export const resetChecks = createAsyncThunk(
   "checks/resetChecks",
   async ({ taskId }, { rejectWithValue }) => {
+    console.log("resetChecks asyncThunk", taskId);
     try {
-      await apiClient.put("/checks/reset", { task_id: taskId });
-      return taskId;
+      const { data } = await apiClient.put("/checks/reset", {
+        task_id: taskId,
+      });
+      console.log("✅ Checks reset:", data);
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -137,12 +141,12 @@ const checkSlice = createSlice({
       //   checksAdapter.upsertMany(state, action.payload);
       // });
       .addCase(resetChecks.fulfilled, (state, action) => {
-        const taskId = action.payload;
+        const taskId = action.payload.task_id;
 
-        // Optimistically reset all checks for the task
-        const checksForTask = state.entities.filter(
+        const checksForTask = Object.values(state.entities).filter(
           (check) => check.task_id === taskId
         );
+
         checksForTask.forEach((check) => {
           check.check_complete = 0;
         });
@@ -171,11 +175,18 @@ export const selectChecksByTaskId = (taskId) =>
 export const selectChecksGroupedByTask = createSelector(
   [selectAllChecks],
   (checks) => {
-    return checks.reduce((acc, check) => {
+    const grouped = checks.reduce((acc, check) => {
       if (!acc[check.task_id]) acc[check.task_id] = [];
       acc[check.task_id].push(check);
       return acc;
     }, {});
+
+    // IMPORTANT: Sort each group by check_order
+    Object.keys(grouped).forEach((taskId) => {
+      grouped[taskId].sort((a, b) => a.check_order - b.check_order);
+    });
+
+    return grouped;
   }
 );
 
