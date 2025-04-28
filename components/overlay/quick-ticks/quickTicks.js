@@ -826,10 +826,10 @@ const QuickTicks = ({
 
               return (
                 <Reorder.Item key={quickTick.id} value={quickTick.id} drag="y">
-                  <div className="flex justify-between items-center w-full px-2 py-[4.5px] hover:bg-zinc-700/30 rounded">
+                  <div className="flex justify-between items-center w-full px-2 gap-2 py-[4.5px] hover:bg-zinc-700/30 rounded">
                     <div className="flex flex-col justify-center ">
                       <div
-                        className={`text-sm break-all relative ml-2 ${
+                        className={`text-sm  relative ml-2 ${
                           quickTick.quicktick_complete === 1
                             ? "text-zinc-500 line-through"
                             : "text-white"
