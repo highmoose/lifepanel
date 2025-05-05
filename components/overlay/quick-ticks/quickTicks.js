@@ -450,7 +450,7 @@ const QuickTabs = () => {
           },
         }}
       >
-        <div className="flex flex-col flex-1 h-screen gap-2 overflow-hidden ">
+        <div className="flex flex-col flex-1 h-[calc(100vh-60px)] gap-2 overflow-hidden pb-2">
           <Reorder.Group
             axis="y"
             values={sortedTabs.map((tab) => tab.id)}

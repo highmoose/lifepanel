@@ -703,7 +703,7 @@ export default function TaskManager({ data }) {
           {checks.map((check) => (
             <Reorder.Item key={check.id} value={check.id}>
               <div
-                className={`rounded transition-opacity duration-1000  h-8 flex flex-col justify-center ${
+                className={`rounded transition-opacity duration-1000 leading-tight flex flex-col justify-center ${
                   visibleChecks ? "opacity-100" : "opacity-0"
                 } `}
               >
@@ -718,7 +718,7 @@ export default function TaskManager({ data }) {
                     >
                       {check.check_name}
                     </p>
-                    <p className="text-gray-300 text-[12px] -mt-1.5">
+                    <p className="text-gray-300 text-[12px] -mt-0.5">
                       Due:{" "}
                       {check.check_due
                         ? moment(check.check_due).isValid()

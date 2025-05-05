@@ -25,7 +25,7 @@ const RenameQuickTabModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="relative flex flex-col w-auto h-fit mb-[60px]  border-zinc-800 bg-zinc-950  px-8 py-6 gap-4 z-10">
+    <div className="relative flex flex-col w-auto h-fit border-zinc-800 bg-zinc-950  px-8 py-6 gap-4 z-10 -mb-2">
       <X
         onClick={onClose}
         size={20}
