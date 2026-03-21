@@ -101,14 +101,16 @@ const QuickTabs = () => {
 
   useEffect(() => {
     const sorted = [...quickTabs].sort(
-      (a, b) => a.quicktab_order - b.quicktab_order
+      (a, b) => a.quicktab_order - b.quicktab_order,
     );
     setTabOrder(sorted.map((tab) => tab.id));
   }, [quickTabs]);
 
   const toggleQuickTab = (id) => {
     setQuickTabsOpen((prev) =>
-      prev.includes(id) ? prev.filter((openId) => openId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((openId) => openId !== id)
+        : [...prev, id],
     );
   };
 
@@ -120,8 +122,8 @@ const QuickTabs = () => {
       .sort((a, b) => a.quicktick_order - b.quicktick_order);
 
     const lastOrder = ticksInTab.length
-      ? ticksInTab[ticksInTab.length - 1].quicktick_order ??
-        ticksInTab.length - 1
+      ? (ticksInTab[ticksInTab.length - 1].quicktick_order ??
+        ticksInTab.length - 1)
       : -1;
 
     const tempId = nanoid();
@@ -188,12 +190,12 @@ const QuickTabs = () => {
       renameQuickTabOptimistic({
         id: selectedQuickTab,
         changes: { quicktab_name: renameQuickTabName },
-      })
+      }),
     );
 
     // 👇 Proceed with API call
     dispatch(
-      renameQuickTabAsync({ id: selectedQuickTab, name: renameQuickTabName })
+      renameQuickTabAsync({ id: selectedQuickTab, name: renameQuickTabName }),
     )
       .unwrap()
       .then(() => {
@@ -249,7 +251,7 @@ const QuickTabs = () => {
       addQuickTabAsync({
         name: newQuickTabName.trim(),
         quicktab_order: 0,
-      })
+      }),
     )
       .unwrap()
       .then((serverTab) => {
@@ -339,8 +341,8 @@ const QuickTabs = () => {
           payload.map(({ id, quicktab_order }) => ({
             id,
             changes: { quicktab_order },
-          }))
-        )
+          })),
+        ),
       );
 
       dispatch(updateQuickTabsOrderAsync(payload));
@@ -521,7 +523,7 @@ const QuickTabs = () => {
                               quickTicks.filter(
                                 (tick) =>
                                   tick.quicktab_id === quickTab.id &&
-                                  tick.quicktick_complete === 1
+                                  tick.quicktick_complete === 1,
                               ).length
                             }
                           </p>
@@ -529,7 +531,7 @@ const QuickTabs = () => {
                           <p className="    flex items-center justify-center">
                             {
                               quickTicks.filter(
-                                (tick) => tick.quicktab_id === quickTab.id
+                                (tick) => tick.quicktab_id === quickTab.id,
                               ).length
                             }{" "}
                           </p>
@@ -585,11 +587,11 @@ const QuickTabs = () => {
                                         e.stopPropagation();
                                         handleUpdateTabColour(
                                           quickTab.id,
-                                          colour
+                                          colour,
                                         );
                                       }}
                                       className={`relative flex w-full h-[24px]  items-center justify-between p-2 rounded shadow-xs border border-transparent group-hover:border-zinc-700 ${getPastelBgClass(
-                                        colour
+                                        colour,
                                       )}`}
                                     >
                                       {" "}
@@ -787,7 +789,7 @@ const QuickTicks = ({
     debounce((id, quicktick_complete) => {
       dispatch(toggleQuickTickComplete({ id, quicktick_complete }));
     }, 500),
-    [dispatch]
+    [dispatch],
   );
 
   useEffect(() => {
@@ -818,7 +820,7 @@ const QuickTicks = ({
           <Reorder.Group axis="y" values={localOrder} onReorder={handleReorder}>
             {localOrder.map((tickId) => {
               const quickTick = allQuickTicks.find(
-                (tick) => tick.id === tickId
+                (tick) => tick.id === tickId,
               );
               if (!quickTick) return null;
 
@@ -860,7 +862,7 @@ const QuickTicks = ({
                               updateQuickTick({
                                 id: quickTick.id,
                                 changes: { quicktick_complete: toggledValue },
-                              })
+                              }),
                             );
 
                             debouncedToggleDispatch(quickTick.id, toggledValue);
@@ -888,7 +890,7 @@ const QuickTicks = ({
                             setEditQuickTickId(quickTick.id);
                             setEditQuickTickName(quickTick.quicktick_desc);
                             setEditQuickTickPriority(
-                              quickTick.quicktick_priority
+                              quickTick.quicktick_priority,
                             );
                             setEditQuickTabId(quickTick.quicktab_id);
                             setActiveModal("edit");

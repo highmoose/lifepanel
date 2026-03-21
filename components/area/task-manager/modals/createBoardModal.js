@@ -15,7 +15,7 @@ const CreateBoardModal = ({ opened, onClose, activeTabId }) => {
       createBoard({
         tab_id: activeTabId,
         board_name: boardName,
-      })
+      }),
     );
 
     setBoardName("");

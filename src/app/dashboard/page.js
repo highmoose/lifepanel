@@ -23,7 +23,8 @@ export default function DashboardPanel() {
   const [selectedNav, setSelectedNav] = useState("taskManager");
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     if (token) {
       dispatch(fetchCurrentUser());
     } else {

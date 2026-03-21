@@ -20,7 +20,7 @@ export const renameQuickTabAsync = createAsyncThunk(
     } catch (error) {
       return thunkAPI.rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const deleteQuickTabAsync = createAsyncThunk(
@@ -32,7 +32,7 @@ export const deleteQuickTabAsync = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const addQuickTabAsync = createAsyncThunk(
@@ -47,7 +47,7 @@ export const addQuickTabAsync = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const updateQuickTabsOrderAsync = createAsyncThunk(
@@ -60,7 +60,7 @@ export const updateQuickTabsOrderAsync = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const toggleQuickTabOpen = createAsyncThunk(
@@ -72,7 +72,7 @@ export const toggleQuickTabOpen = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const updateQuickTabColour = createAsyncThunk(
@@ -86,7 +86,7 @@ export const updateQuickTabColour = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 const quickTabSlice = createSlice({

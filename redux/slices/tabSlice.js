@@ -27,7 +27,7 @@ export const createTab = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const deleteTab = createAsyncThunk(
@@ -39,7 +39,7 @@ export const deleteTab = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 // Slice

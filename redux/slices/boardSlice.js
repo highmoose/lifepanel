@@ -22,7 +22,7 @@ export const createBoard = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const deleteBoard = createAsyncThunk(
@@ -34,7 +34,7 @@ export const deleteBoard = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const updateBoardName = createAsyncThunk(
@@ -48,7 +48,7 @@ export const updateBoardName = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const moveBoardToTab = createAsyncThunk(
@@ -63,7 +63,7 @@ export const moveBoardToTab = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 export const saveReorderedBoards = createAsyncThunk(
@@ -77,7 +77,7 @@ export const saveReorderedBoards = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
+  },
 );
 
 // Adapter
@@ -178,7 +178,7 @@ export const { selectAll: selectBoards, selectById: selectBoardById } =
 
 export const selectBoardsByTabId = (tabId) =>
   createSelector([selectBoards], (boards) =>
-    boards.filter((board) => board.tab_id === tabId)
+    boards.filter((board) => board.tab_id === tabId),
   );
 
 export const selectBoardLoading = (state) => state.boards.loading;

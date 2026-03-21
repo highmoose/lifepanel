@@ -381,7 +381,7 @@ export default function TaskManager({ data }) {
       debounce((tasks) => {
         dispatch(saveReorderedTasks(tasks));
       }, 1000),
-      []
+      [],
     );
 
     useEffect(() => {
@@ -473,7 +473,7 @@ export default function TaskManager({ data }) {
             >
               <div
                 className={`relative bg-white rounded p-4 border-l-2 ${getBorderClass(
-                  task.task_priority
+                  task.task_priority,
                 )} `}
               >
                 <div className="flex justify-between items-start">
@@ -653,7 +653,7 @@ export default function TaskManager({ data }) {
               toast.error("Failed to update check");
             });
         },
-        500
+        500,
       );
     }, []);
 

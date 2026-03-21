@@ -14,7 +14,7 @@ const CreateTabModal = ({ opened, onClose }) => {
     dispatch(
       createTab({
         tab_name: tabName,
-      })
+      }),
     );
 
     setTabName("");
