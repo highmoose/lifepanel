@@ -35,7 +35,7 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-// Login â€” stores token in localStorage
+// Login — stores token in localStorage
 export const loginUser = createAsyncThunk(
   "user/login",
   async ({ email, password }, { rejectWithValue }) => {
@@ -55,7 +55,7 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Register â€” creates account and stores token
+// Register — creates account and stores token
 export const registerUser = createAsyncThunk(
   "user/register",
   async ({ email, password, password_confirmation, display_name }, { rejectWithValue }) => {
@@ -78,7 +78,7 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// Logout â€” revokes token on backend and clears localStorage
+// Logout — revokes token on backend and clears localStorage
 export const logoutUser = createAsyncThunk(
   "user/logout",
   async (_, { rejectWithValue }) => {
@@ -154,30 +154,6 @@ const userSlice = createSlice({
         state.data = null;
         state.loading = false;
         state.error = null;
-      });
-  },
-});
-
-// Selectors
-export const selectUserData = (state) => state.user.data;
-export const selectUserLoading = (state) => state.user.loading;
-export const selectUserError = (state) => state.user.error;
-
-// Actions
-export const { clearUserData } = userSlice.actions;
-
-// Reducer
-export default userSlice.reducer;
-
-        state.error = null;
-      })
-      .addCase(fetchUserByUid.fulfilled, (state, action) => {
-        state.loading = false;
-        state.data = action.payload; // only the user object
-      })
-      .addCase(fetchUserByUid.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });
