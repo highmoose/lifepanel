@@ -5,7 +5,6 @@ import {
   createEntityAdapter,
 } from "@reduxjs/toolkit";
 import apiClient from "@api/api";
-import { auth } from "@/app/firebase/config";
 import { createSelector } from "@reduxjs/toolkit";
 
 // Thunks
