@@ -35,7 +35,7 @@ export const fetchCurrentUser = createAsyncThunk(
   }
 );
 
-// Login — stores token in localStorage
+// Login
 export const loginUser = createAsyncThunk(
   "user/login",
   async ({ email, password }, { rejectWithValue }) => {
@@ -55,7 +55,7 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// Register — creates account and stores token
+// Register
 export const registerUser = createAsyncThunk(
   "user/register",
   async ({ email, password, password_confirmation, display_name }, { rejectWithValue }) => {
@@ -78,7 +78,7 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// Logout — revokes token on backend and clears localStorage
+// Logout
 export const logoutUser = createAsyncThunk(
   "user/logout",
   async (_, { rejectWithValue }) => {
@@ -110,7 +110,6 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchCurrentUser
       .addCase(fetchCurrentUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -123,7 +122,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // loginUser
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -136,7 +134,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // registerUser
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -149,7 +146,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // logoutUser
       .addCase(logoutUser.fulfilled, (state) => {
         state.data = null;
         state.loading = false;
@@ -158,13 +154,10 @@ const userSlice = createSlice({
   },
 });
 
-// Selectors
 export const selectUserData = (state) => state.user.data;
 export const selectUserLoading = (state) => state.user.loading;
 export const selectUserError = (state) => state.user.error;
 
-// Actions
 export const { clearUserData } = userSlice.actions;
 
-// Reducer
 export default userSlice.reducer;
