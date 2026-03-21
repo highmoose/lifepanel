@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { createBoard } from "@redux/slices/boardSlice";
 import { useState } from "react";
 
-const CreateBoardModal = ({ opened, onClose, activeTabId, uid }) => {
+const CreateBoardModal = ({ opened, onClose, activeTabId }) => {
   const dispatch = useDispatch();
   const [boardName, setBoardName] = useState("");
 
@@ -13,7 +13,6 @@ const CreateBoardModal = ({ opened, onClose, activeTabId, uid }) => {
 
     dispatch(
       createBoard({
-        uid: uid,
         tab_id: activeTabId,
         board_name: boardName,
       })

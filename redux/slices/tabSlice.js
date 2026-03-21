@@ -17,11 +17,10 @@ const initialState = tabsAdapter.getInitialState({
 // creat tab thunk
 export const createTab = createAsyncThunk(
   "tabs/createTab",
-  async ({ tab_name, uid }, { rejectWithValue }) => {
+  async ({ tab_name }, { rejectWithValue }) => {
     try {
       const { data } = await apiClient.post("/tabs", {
         tab_name,
-        uid,
       });
 
       return data; // Should be full tab list

@@ -161,13 +161,11 @@ export default function TaskManager({ data }) {
             opened={addBoardModelOpen}
             onClose={() => setAddBoardModelOpen(false)}
             activeTabId={activeTab.id}
-            uid={user.uid}
           />
         )}
         <CreateTabModal
           opened={createTabModalOpen}
           onClose={() => setCreateTabModalOpen(false)}
-          uid={user.uid}
         />
         <DeleteTabModal
           opened={deleteTabModalOpen}

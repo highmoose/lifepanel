@@ -3,8 +3,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import NavMenu from "../../../components/navigation/navMenu";
-import { auth } from "./../firebase/config";
-import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import TaskManager from "@components/area/task-manager/taskManager";
 import { QuickTabs } from "../../../components/overlay/quick-ticks/quickTicks";
@@ -14,9 +12,9 @@ import { useDisclosure } from "@mantine/hooks";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserByUid, selectUserData } from "@redux/slices/userSlice";
+import { fetchCurrentUser, selectUserData } from "@redux/slices/userSlice";
 
-export default function DashboardPanel(signOut) {
+export default function DashboardPanel() {
   const router = useRouter();
 
   const dispatch = useDispatch();
@@ -25,17 +23,12 @@ export default function DashboardPanel(signOut) {
   const [selectedNav, setSelectedNav] = useState("taskManager");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        dispatch(fetchUserByUid());
-      } else {
-        router.push("/");
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (token) {
+      dispatch(fetchCurrentUser());
+    } else {
+      router.push("/");
+    }
   }, [router]);
 
   const handleSelectedNav = (nav) => {
@@ -49,7 +42,6 @@ export default function DashboardPanel(signOut) {
       {/* Left Nav Bar */}
       <NavMenu
         userName={userData?.display_name}
-        signOut={signOut}
         setSelectedNav={handleSelectedNav}
       />
       {/* Tabs */}

@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { createTab } from "@redux/slices/tabSlice"; // make sure this exists
 import { useState } from "react";
 
-const CreateTabModal = ({ opened, onClose, uid }) => {
+const CreateTabModal = ({ opened, onClose }) => {
   const dispatch = useDispatch();
   const [tabName, setTabName] = useState("");
 
@@ -13,7 +13,6 @@ const CreateTabModal = ({ opened, onClose, uid }) => {
 
     dispatch(
       createTab({
-        uid: uid,
         tab_name: tabName,
       })
     );

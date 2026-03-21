@@ -11,10 +11,9 @@ import { createSelector } from "@reduxjs/toolkit";
 // Thunks
 export const createBoard = createAsyncThunk(
   "boards/createBoard",
-  async ({ uid, board_name, tab_id }, { rejectWithValue }) => {
+  async ({ board_name, tab_id }, { rejectWithValue }) => {
     try {
       const { data } = await apiClient.post("/boards", {
-        uid,
         board_name,
         tab_id,
       });

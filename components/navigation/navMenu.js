@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { auth } from "../../src/app/firebase/config";
-import { signOut } from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { logoutUser } from "@redux/slices/userSlice";
 import {
   BarChart4,
   CircleUser,
@@ -18,6 +19,8 @@ import {
 export default function NavMenu({ userName, setSelectedNav }) {
   const [width, setWidth] = useState("thin");
   const [selected, setSelected] = useState("taskManager");
+  const dispatch = useDispatch();
+  const router = useRouter();
 
   const handleSelectedNav = (nav) => {
     setSelected(nav);
@@ -25,11 +28,8 @@ export default function NavMenu({ userName, setSelectedNav }) {
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Sign out error: ", error);
-    }
+    await dispatch(logoutUser());
+    router.push("/");
   };
 
   const navItems = [

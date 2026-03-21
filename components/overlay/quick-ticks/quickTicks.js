@@ -240,7 +240,6 @@ const QuickTabs = () => {
     const optimisticTab = {
       id: tempId,
       quicktab_name: newQuickTabName.trim(),
-      user_id: user.uid,
       quicktab_order: 0,
     };
     dispatch(addQuickTabOptimistic(optimisticTab));
@@ -249,7 +248,6 @@ const QuickTabs = () => {
     dispatch(
       addQuickTabAsync({
         name: newQuickTabName.trim(),
-        userId: user.uid,
         quicktab_order: 0,
       })
     )

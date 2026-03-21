@@ -37,12 +37,11 @@ export const deleteQuickTabAsync = createAsyncThunk(
 
 export const addQuickTabAsync = createAsyncThunk(
   "quickTabs/addQuickTab",
-  async ({ name, userId, quicktab_order }, { rejectWithValue }) => {
+  async ({ name, quicktab_order }, { rejectWithValue }) => {
     try {
       const { data } = await apiClient.post("/quicktabs", {
         quicktab_name: name,
-        user_id: userId,
-        quicktab_order, // 👈 make sure backend saves this
+        quicktab_order,
       });
       return data;
     } catch (error) {
